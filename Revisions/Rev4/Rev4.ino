@@ -1,10 +1,13 @@
 /*
  * MagicBand Tree Controller — Rev4
+ * Hardware: Arduino Nano (ATmega328P)
  *
  * Tap an RFID card/band to toggle Christmas tree lights via 433MHz RF outlet.
  * No mains wiring — Arduino sends RF signal to a pre-paired outlet.
  *
- * Pin map:
+ * Power: 5.5mm/2.1mm barrel jack → Nano VIN + GND pins (5V 3A supply)
+ *
+ * Pin map (Nano pin numbers = Uno pin numbers, different physical layout):
  *   2  — DFPlayer Mini RX  (Arduino TX → player)
  *   3  — DFPlayer Mini TX  (player TX → Arduino)
  *   4  — MFRC522 SS
@@ -15,6 +18,8 @@
  *  11  — SPI MOSI
  *  12  — SPI MISO
  *  13  — SPI SCK
+ *  3V3 — MFRC522 VCC
+ *  GND — common ground
  *
  * Before flashing:
  *   1. Run Sniffer.ino with your receiver to capture remote codes
