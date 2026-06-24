@@ -2,72 +2,83 @@
    Magic Band — RFID-triggered LED ring and relay controller
    Target: Arduino Nano
 
-   MFRC522 wiring:
+   ── Pin Map ─────────────────────────────────────────────────────────────
+   MFRC522 (SPI, fixed):
      RST → D9  |  SS → D10  |  MOSI → D11  |  MISO → D12  |  SCK → D13
+
+   DFPlayer Mini (SoftwareSerial — D2/D3 avoid SPI pin conflicts):
+     D2 → DFPlayer RX  |  D3 ← DFPlayer TX
+
+   Relay      → D7
+   Outer LEDs → D5
+   Inner LEDs → D6
 */
 
 #include <Adafruit_NeoPixel.h>
 #ifdef __AVR__
 #include <avr/power.h>
 #endif
-#include "SoftwareSerial.h"
-#include "DFRobotDFPlayerMini.h"
+#include <SoftwareSerial.h>
+#include <DFRobotDFPlayerMini.h>
 #include <SPI.h>
 #include <MFRC522.h>
 
 // ── LED Strip Configuration ────────────────────────────────────────────────
-// Update these two values when cutting strips to a different length
+// Change these when cutting strips to a different length — nothing else needs updating
 #define OUTER_LEDS  16
 #define INNER_LEDS  11
-#define PIN_OUTER    5
-#define PIN_INNER    6
+
+const uint8_t PIN_OUTER = 5;
+const uint8_t PIN_INNER = 6;
 
 Adafruit_NeoPixel outerRing(OUTER_LEDS, PIN_OUTER, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel innerRing(INNER_LEDS, PIN_INNER, NEO_GRB + NEO_KHZ800);
 
 // ── RFID ──────────────────────────────────────────────────────────────────
-#define RST_PIN  9
-#define SS_PIN   10
+const uint8_t RST_PIN = 9;
+const uint8_t SS_PIN  = 10;
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 
 // ── DFPlayer Mini ─────────────────────────────────────────────────────────
-// Note: PIN_MP3_RX shares D10 with SS_PIN — confirm wiring before enabling
-static const uint8_t PIN_MP3_TX = 11;
-static const uint8_t PIN_MP3_RX = 10;
+const uint8_t PIN_MP3_TX = 2;   // D2 → DFPlayer RX
+const uint8_t PIN_MP3_RX = 3;   // D3 ← DFPlayer TX
 SoftwareSerial softwareSerial(PIN_MP3_RX, PIN_MP3_TX);
 DFRobotDFPlayerMini player;
+bool playerReady = false;
+
+// ── Hardware ──────────────────────────────────────────────────────────────
+const uint8_t RELAY_PIN  = 7;
+const int     SPIN_SPEED = 50;  // ms per step in chase animation
+
+// Colors — adjust to taste
+const uint8_t R_IDLE   = 255, G_IDLE   = 255, B_IDLE   = 0;    // yellow
+const uint8_t R_ACCESS =   0, G_ACCESS = 255, B_ACCESS  = 0;   // green (reserved for UID-gated use)
 
 // ── State ─────────────────────────────────────────────────────────────────
-const int RELAY_PIN   = 7;
-const int SPIN_SPEED  = 50;
-int scanCount         = 2;  // even → lights on branch fires first
-
-// Idle color (yellow) and access color (green)
-const uint8_t r = 255, g = 255, b = 0;
-const uint8_t rA = 0,  gA = 255, bA = 0;
+int scanCount = 0;  // even → ON (rainbow); odd → OFF
 
 //*******************************************************************************//
 
 void setup() {
-  delay(100);
   Serial.begin(9600);
-  delay(100);
+  // Allow up to 2 s for IDE serial monitor; skips automatically in standalone
+  unsigned long t0 = millis();
+  while (!Serial && millis() - t0 < 2000);
+
   softwareSerial.begin(9600);
-  delay(100);
-  while (!Serial);
   SPI.begin();
-  delay(500);
   mfrc522.PCD_Init();
-  delay(500);
   mfrc522.PCD_DumpVersionToSerial();
-  delay(500);
 
   pinMode(RELAY_PIN, OUTPUT);
   digitalWrite(RELAY_PIN, LOW);
 
   if (player.begin(softwareSerial)) {
-    Serial.println("Speaker on");
     player.volume(20);
+    playerReady = true;
+    Serial.println(F("DFPlayer ready"));
+  } else {
+    Serial.println(F("DFPlayer not found — check wiring on D2/D3"));
   }
 
   outerRing.begin();
@@ -87,71 +98,63 @@ void ledsOff() {
   innerRing.show();
 }
 
+// All LEDs to access color — wire to a specific UID check when needed
 void ledsAccess() {
   for (int i = 0; i < outerRing.numPixels(); i++)
-    outerRing.setPixelColor(i, outerRing.Color(rA, gA, bA));
+    outerRing.setPixelColor(i, outerRing.Color(R_ACCESS, G_ACCESS, B_ACCESS));
   for (int i = 0; i < innerRing.numPixels(); i++)
-    innerRing.setPixelColor(i, innerRing.Color(rA, gA, bA));
+    innerRing.setPixelColor(i, innerRing.Color(R_ACCESS, G_ACCESS, B_ACCESS));
   outerRing.show();
   innerRing.show();
 }
 
-// Chase animation on inner ring, high index → low
+// Chase animation down the inner ring; wraps to strip length automatically
 void spinAnimation() {
   for (int i = innerRing.numPixels() - 1; i >= 0; i--) {
     if (i < innerRing.numPixels() - 1)
-      innerRing.setPixelColor(i + 1, innerRing.Color(0, 0, 0));
-    innerRing.setPixelColor(i, innerRing.Color(r, g, b));
+      innerRing.setPixelColor(i + 1, 0);
+    innerRing.setPixelColor(i, innerRing.Color(R_IDLE, G_IDLE, B_IDLE));
     innerRing.show();
     delay(SPIN_SPEED);
   }
-  innerRing.setPixelColor(0, innerRing.Color(0, 0, 0));
+  innerRing.setPixelColor(0, 0);
   innerRing.show();
   delay(SPIN_SPEED);
 }
 
 void toggleRelay() {
-  if (digitalRead(RELAY_PIN) == HIGH) {
-    digitalWrite(RELAY_PIN, LOW);
-    Serial.println("Relay off");
-  } else {
-    digitalWrite(RELAY_PIN, HIGH);
-    Serial.println("Relay on");
-  }
+  bool on = digitalRead(RELAY_PIN) == HIGH;
+  digitalWrite(RELAY_PIN, on ? LOW : HIGH);
+  Serial.println(on ? F("Relay off") : F("Relay on"));
 }
 
-uint32_t Wheel(byte pos) {
+static uint32_t colorWheel(byte pos) {
   if (pos < 85)
     return outerRing.Color(pos * 3, 255 - pos * 3, 0);
-  else if (pos < 170) {
+  if (pos < 170) {
     pos -= 85;
     return outerRing.Color(255 - pos * 3, 0, pos * 3);
-  } else {
-    pos -= 170;
-    return outerRing.Color(0, pos * 3, 255 - pos * 3);
   }
+  pos -= 170;
+  return outerRing.Color(0, pos * 3, 255 - pos * 3);
 }
 
+// Wheel-based rainbow — available for future triggers
 void rainbow(uint8_t wait) {
-  Serial.println("start rainbow");
-  for (int j = 0; j < 256; j++) {
-    for (int i = 0; i < outerRing.numPixels(); i++) {
-      outerRing.setPixelColor(i, Wheel((i + j) & 255));
-      if (mfrc522.PICC_IsNewCardPresent()) {
-        Serial.println("Card detected in rainbow");
-        delay(1000);
-      }
-    }
+  for (uint8_t j = 0; j < 255; j++) {
+    for (int i = 0; i < outerRing.numPixels(); i++)
+      outerRing.setPixelColor(i, colorWheel((i + j) & 255));
     for (int i = 0; i < innerRing.numPixels(); i++)
-      innerRing.setPixelColor(i, Wheel((i + j) & 255));
+      innerRing.setPixelColor(i, colorWheel((i + j) & 255));
     outerRing.show();
     innerRing.show();
     delay(wait);
   }
 }
 
+// Smooth HSV rainbow, gamma-corrected
 void rainbow2(int wait) {
-  for (long hue = 0; hue < 5 * 65536; hue += 256) {
+  for (long hue = 0; hue < 5 * 65536L; hue += 256) {
     for (int i = 0; i < outerRing.numPixels(); i++) {
       long pixelHue = hue + (i * 65536L / outerRing.numPixels());
       outerRing.setPixelColor(i, outerRing.gamma32(outerRing.ColorHSV(pixelHue)));
@@ -166,34 +169,56 @@ void rainbow2(int wait) {
   }
 }
 
-void(* resetFunc)(void) = 0;
+// Read first/last name stored on card and print to serial
+// Soft failures print a blank field; RFID halt is handled by the caller
+void readGuestName() {
+  MFRC522::MIFARE_Key key;
+  for (byte i = 0; i < 6; i++) key.keyByte[i] = 0xFF;
+
+  byte buffer[18];
+  byte len;
+  MFRC522::StatusCode status;
+
+  Serial.print(F("Name: "));
+
+  // First name — block 4
+  len = 18;
+  status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, 4, &key, &(mfrc522.uid));
+  if (status == MFRC522::STATUS_OK) {
+    status = mfrc522.MIFARE_Read(4, buffer, &len);
+    if (status == MFRC522::STATUS_OK)
+      for (uint8_t i = 0; i < 16; i++)
+        if (buffer[i] != 32) Serial.write(buffer[i]);
+  }
+  Serial.print(' ');
+
+  // Last name — block 1
+  len = 18;
+  status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, 1, &key, &(mfrc522.uid));
+  if (status == MFRC522::STATUS_OK) {
+    status = mfrc522.MIFARE_Read(1, buffer, &len);
+    if (status == MFRC522::STATUS_OK)
+      for (uint8_t i = 0; i < 16; i++)
+        if (buffer[i] != 32) Serial.write(buffer[i]);
+  }
+  Serial.println();
+}
 
 //*******************************************************************************//
 
 void loop() {
-  MFRC522::MIFARE_Key key;
-  for (byte i = 0; i < 6; i++) key.keyByte[i] = 0xFF;
-
-  byte len;
-  MFRC522::StatusCode status;
-
   if (!mfrc522.PICC_IsNewCardPresent()) return;
   if (!mfrc522.PICC_ReadCardSerial())   return;
 
-  Serial.println(F("**Band/Card Detected:**"));
-  Serial.print("UID: ");
-  String content = "";
+  Serial.print(F("Card detected — UID:"));
   for (byte i = 0; i < mfrc522.uid.size; i++) {
-    Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
+    Serial.print(' ');
+    if (mfrc522.uid.uidByte[i] < 0x10) Serial.print('0');
     Serial.print(mfrc522.uid.uidByte[i], HEX);
-    content.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
-    content.concat(String(mfrc522.uid.uidByte[i], HEX));
   }
   Serial.println();
-  content.toUpperCase();
 
-  Serial.println("Authorized access");
-
+  // Animate, toggle relay, set light state for this scan
   spinAnimation();
   spinAnimation();
   spinAnimation();
@@ -206,53 +231,11 @@ void loop() {
   }
   scanCount++;
 
-  player.play(1);
-  Serial.println();
+  if (playerReady) player.play(1);
   delay(2500);
 
-  // Read name stored on card
-  mfrc522.PICC_DumpDetailsToSerial(&(mfrc522.uid));
-  Serial.print(F("Name: "));
+  readGuestName();
 
-  byte buffer1[18];
-  byte block = 4;
-  len = 18;
-
-  status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, 4, &key, &(mfrc522.uid));
-  if (status != MFRC522::STATUS_OK) {
-    Serial.print(F("Auth failed: "));
-    Serial.println(mfrc522.GetStatusCodeName(status));
-    return;
-  }
-  status = mfrc522.MIFARE_Read(block, buffer1, &len);
-  if (status != MFRC522::STATUS_OK) {
-    Serial.print(F("Read failed: "));
-    Serial.println(mfrc522.GetStatusCodeName(status));
-    return;
-  }
-  for (uint8_t i = 0; i < 16; i++) {
-    if (buffer1[i] != 32) Serial.write(buffer1[i]);
-  }
-  Serial.print(" ");
-
-  byte buffer2[18];
-  block = 1;
-  status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, 1, &key, &(mfrc522.uid));
-  if (status != MFRC522::STATUS_OK) {
-    Serial.print(F("Auth failed: "));
-    Serial.println(mfrc522.GetStatusCodeName(status));
-    return;
-  }
-  status = mfrc522.MIFARE_Read(block, buffer2, &len);
-  if (status != MFRC522::STATUS_OK) {
-    Serial.print(F("Read failed: "));
-    Serial.println(mfrc522.GetStatusCodeName(status));
-    return;
-  }
-  for (uint8_t i = 0; i < 16; i++) Serial.write(buffer2[i]);
-
-  Serial.println(F("\n**End Reading**\n"));
-  delay(1000);
   mfrc522.PICC_HaltA();
   mfrc522.PCD_StopCrypto1();
 }
