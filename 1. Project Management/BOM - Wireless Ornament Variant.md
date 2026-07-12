@@ -22,7 +22,7 @@ Audio (DFPlayer Mini) is **optional here, same as the wired build** — not part
 | RFID Reader | MFRC522 module | ~$1.25–5 (bulk) / up to $10 (kit) | Active scan: 13–26mA · Power-down: 10µA | 3.3V, SPI |
 | NeoPixels (outer) | Adafruit NeoPixel Ring, 16px | $9.95 | Worst case: 960mA · Off (gated): ~0mA | Pin 5, NEO_GRB, 5V |
 | NeoPixels (inner) | Adafruit NeoPixel Ring, 12px (closest to spec'd 11px) | $5.25 | Worst case: 720mA · Off (gated): ~0mA | Pin 6, NEO_GRB, 5V |
-| RF Transmitter | FS1000A 433MHz TX module | ~$1–2 | Transmit: 20–30mA · Standby: ~0mA | Pin 8 |
+| RF Transmitter | D-FLIFE 433MHz ASK TX module ([Amazon B0BZRRBBNK](https://www.amazon.com/dp/B0BZRRBBNK), 5-pack) | ~$1–2/unit | Transmit: 20–30mA · Standby: ~0mA | Data → D8. **Power in is 3.3V, not 5V** — shares the MFRC522's 3.3V rail, not the raw 5V bus. See [RF Module Pinout - D-FLIFE 433MHz Kit.md](RF%20Module%20Pinout%20-%20D-FLIFE%20433MHz%20Kit.md) for full pinout. |
 | RF Outlet | Etekcity 433MHz outlet kit | ~$25–30 | N/A — mains powered | Pre-paired before shipping; not part of ornament battery budget |
 | **Battery** | Adafruit 2000mAh 3.7V protected LiPo, JST-PH (product #2011) | $12.50 | — (source) | Onboard protection circuit (over-charge/discharge/short) confirmed |
 | **Charge/Boost** | Seeed Studio Lipo Rider Plus, 5V/2.4A, USB-C | ~$5.39–6.50 | No-load quiescent current: **unverified** — flag for bench test | Replaces PowerBoost 1000C, which is out of stock. No minimum-load auto-shutoff (dedicated project-power board, not a "smart" power bank IC) — safe for always-on/duty-cycled loads |
@@ -54,7 +54,7 @@ Adds ~$17–22 to cost. If added, needs its own MOSFET gate (or share the NeoPix
 | Pro Mini (ATmega328P core) | Active ~15–20mA / Sleep ~4.5µA | ~20mA | Standard datasheet figure, low confidence — not independently re-verified |
 | MFRC522 | Continuous scan: 13–26mA / Power-down: 10µA | 26mA | [NXP datasheet](https://www.nxp.com/docs/en/data-sheet/MFRC522.pdf) |
 | NeoPixels (28px total) | Off, gated: ~0mA / Off, ungated: ~16.8mA | 1.68A (all 28px full white) | [Adafruit Überguide](https://learn.adafruit.com/adafruit-neopixel-uberguide/powering-neopixels) (worst case) + [bench-measured off-state](https://refcircuit.com/articles/876-quiescent-current-of-addressable-led-ws2812-measurement.html) |
-| RF transmitter | Standby ~0mA | 20–30mA during burst | [components101.com](https://components101.com/modules/433-mhz-rf-transmitter-module) |
+| RF transmitter | Standby ~0mA | 20–30mA during burst, on the **3.3V rail** (shared with MFRC522, not the 5V bus) | [components101.com](https://components101.com/modules/433-mhz-rf-transmitter-module) (general ASK TX figures) + [D-FLIFE listing](https://www.amazon.com/dp/B0BZRRBBNK) for the specific sourced part's pinout/voltage |
 | Boost converter (Lipo Rider Plus) | No-load Iq: **unverified** | Rated 2.4A | Open gap — bench test recommended |
 
 **Two scenarios, same hardware:**

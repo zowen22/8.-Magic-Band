@@ -22,8 +22,10 @@
      Outer ring → D5  |  Inner ring → D6
      VCC gate (MOSFET driver input) → D7 — HIGH powers the rings, LOW cuts them
 
-   RF Transmitter (433MHz, FS1000A):
-     DATA → D8
+   RF Transmitter (433MHz, D-FLIFE ASK TX — see 1. Project Management/
+   RF Module Pinout - D-FLIFE 433MHz Kit.md):
+     DATA → D8  |  PWR IN → 3V3 (shares the MFRC522's 3.3V rail — this
+     module is 3.3V-only, NOT the 5V bus)  |  GND → GND  |  short antenna
 
    DFPlayer Mini (optional — NOT part of the baseline wireless BOM/power
    budget; compiled out unless ENABLE_AUDIO is defined):
