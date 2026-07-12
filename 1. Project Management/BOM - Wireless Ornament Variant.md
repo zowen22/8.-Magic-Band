@@ -1,35 +1,45 @@
 # BOM — Wireless Ornament Variant
 
 *Created: 2026-07-07*
-*Status: Draft — assumptions below need confirmation*
+*Updated: 2026-07-12*
+*Status: Draft — pricing/consumption sourced, pending prototype validation*
 
 -----
 
 ## What This Is
 
-The current build (documented in `4. Technical Reference.md`) already controls the tree lights wirelessly via 433MHz RF to the outlet — no mains wiring, no floor box. But the ornament itself is still tethered: it draws power through a 5.5mm/2.1mm barrel jack wired to a wall adapter.
+The current build (documented in `4. Technical Reference.md`) already controls the tree lights wirelessly via 433MHz RF to the outlet — no mains wiring, no floor box. This variant also untethers the ornament's power: it runs on an internal rechargeable battery, charged via USB-C, instead of a barrel jack + wall adapter.
 
-This variant removes that cord. The ornament runs on an internal rechargeable battery, charged via USB-C when needed. Everything else (RFID, NeoPixels, RF transmitter, audio) is unchanged from the current architecture.
-
-**Assumption flag:** if "wireless ornament" meant something other than untethering the power (e.g. a wireless data link, wireless charging pad, etc.), let me know and I'll rework this.
+Audio (DFPlayer Mini) is **optional here, same as the wired build** — not part of the baseline BOM or power budget below, but listed separately if wanted.
 
 -----
 
-## Bill of Materials
+## Bill of Materials (baseline, no audio)
 
-| Component | Part | Notes |
-|---|---|---|
-| Microcontroller | Arduino Nano (ATmega328P) | Unchanged |
-| RFID Reader | MFRC522 | Unchanged, 3.3V, SPI |
-| NeoPixels (outer) | Ring, 16px | Unchanged, Pin 5, NEO_GRB, 5V |
-| NeoPixels (inner) | Ring, 11px | Unchanged, Pin 6, NEO_GRB, 5V |
-| RF Transmitter | 433MHz transmitter module | Unchanged, Pin 8 |
-| RF Outlet | Etekcity or similar 433MHz outlet | Unchanged, pre-paired before shipping |
-| Audio | DFPlayer Mini + 8Ω 1W speaker | Unchanged, Pins 2/3 |
-| MicroSD | Any small card | Unchanged, `001.mp3` |
-| **Battery** | Single-cell LiPo, 3.7V nominal, JST-PH connector, **2000mAh** | Sized for multi-day use on tap-triggered duty cycle — see Power Budget below. Swap for a smaller cell (500–1000mAh) if shell space is tight. |
-| **Charge/Boost** | Adafruit PowerBoost 1000C | LiPo charger + 5V boost (up to 1A continuous) in one board, USB-C input. Replaces barrel jack, wall adapter, *and* a separate charge/boost circuit. Has onboard battery-protection (no separate protection IC needed). |
-| **Power switch** | SPDT slide switch on PowerBoost `EN` pin | Physical on/off without disconnecting the battery |
+| Component | Part | Price | Consumption | Notes |
+|---|---|---|---|---|
+| Microcontroller | **Arduino Pro Mini, 5V/16MHz** | ~$5–6.50 (clone) / ~$10 (SparkFun official) | Active: ~15–20mA · Sleep: ~4.5µA (BOD off) | Swap from Nano — no onboard CH340 USB chip, so no 5–20mA sleep-mode floor. Same ATmega328P, same pin behavior/code. |
+| RFID Reader | MFRC522 module | ~$1.25–5 (bulk) / up to $10 (kit) | Active scan: 13–26mA · Power-down: 10µA | 3.3V, SPI |
+| NeoPixels (outer) | Adafruit NeoPixel Ring, 16px | $9.95 | Worst case: 960mA · Off (gated): ~0mA | Pin 5, NEO_GRB, 5V |
+| NeoPixels (inner) | Adafruit NeoPixel Ring, 12px (closest to spec'd 11px) | $5.25 | Worst case: 720mA · Off (gated): ~0mA | Pin 6, NEO_GRB, 5V |
+| RF Transmitter | FS1000A 433MHz TX module | ~$1–2 | Transmit: 20–30mA · Standby: ~0mA | Pin 8 |
+| RF Outlet | Etekcity 433MHz outlet kit | ~$25–30 | N/A — mains powered | Pre-paired before shipping; not part of ornament battery budget |
+| **Battery** | Adafruit 2000mAh 3.7V protected LiPo, JST-PH (product #2011) | $12.50 | — (source) | Onboard protection circuit (over-charge/discharge/short) confirmed |
+| **Charge/Boost** | Seeed Studio Lipo Rider Plus, 5V/2.4A, USB-C | ~$5.39–6.50 | No-load quiescent current: **unverified** — flag for bench test | Replaces PowerBoost 1000C, which is out of stock. No minimum-load auto-shutoff (dedicated project-power board, not a "smart" power bank IC) — safe for always-on/duty-cycled loads |
+| **Power gating** | Adafruit MOSFET Driver, PID 5648 (×1) | $3.95 | Gate draws ~0mA | Cuts NeoPixel VCC when not animating — the LEDs draw ~0.6mA/pixel even "off" if VCC stays connected (28px ≈ 16.8mA wasted if ungated) |
+
+**Baseline total (excl. RF outlet): ~$44–52**
+**All-in with outlet kit: ~$69–82**
+
+### Optional add-on: Audio (same status as wired build)
+
+| Component | Part | Price | Consumption |
+|---|---|---|---|
+| Audio player | DFPlayer Mini | $8.75–11 | Standby: ~20mA · Playing: 20–150mA (up to 200mA) |
+| Speaker | 8Ω 1W mini speaker | $2.99 | Draws only while playing (included above) |
+| Storage | MicroSD, 4–8GB | ~$5–8 | Negligible |
+
+Adds ~$17–22 to cost. If added, needs its own MOSFET gate (or share the NeoPixel gate if audio and animation always fire together) and pulls the peak current during a tap event up toward the Lipo Rider Plus's 2.4A ceiling — worth re-checking headroom if this gets added later.
 
 ### Removed vs. the wired build
 - 5.5mm/2.1mm panel-mount barrel jack
@@ -37,32 +47,36 @@ This variant removes that cord. The ornament runs on an internal rechargeable ba
 
 -----
 
-## Power Budget
+## Power Budget & Runtime
 
-| Component | Idle/typical | Worst case (peak) |
-|---|---|---|
-| Arduino Nano | ~20mA | ~50mA |
-| MFRC522 (scanning) | ~13–26mA | ~26mA |
-| NeoPixels (27px total, animation) | ~50–150mA (partial brightness/color) | ~1.6A (all 27px full white) |
-| DFPlayer Mini + speaker | ~20mA idle / ~100–200mA playing | ~200mA |
-| RF transmitter (burst, sending 5×) | negligible (short duty cycle) | ~30mA during burst |
+| Component | Idle/typical | Worst case (peak) | Source |
+|---|---|---|---|
+| Pro Mini (ATmega328P core) | Active ~15–20mA / Sleep ~4.5µA | ~20mA | Standard datasheet figure, low confidence — not independently re-verified |
+| MFRC522 | Continuous scan: 13–26mA / Power-down: 10µA | 26mA | [NXP datasheet](https://www.nxp.com/docs/en/data-sheet/MFRC522.pdf) |
+| NeoPixels (28px total) | Off, gated: ~0mA / Off, ungated: ~16.8mA | 1.68A (all 28px full white) | [Adafruit Überguide](https://learn.adafruit.com/adafruit-neopixel-uberguide/powering-neopixels) (worst case) + [bench-measured off-state](https://refcircuit.com/articles/876-quiescent-current-of-addressable-led-ws2812-measurement.html) |
+| RF transmitter | Standby ~0mA | 20–30mA during burst | [components101.com](https://components101.com/modules/433-mhz-rf-transmitter-module) |
+| Boost converter (Lipo Rider Plus) | No-load Iq: **unverified** | Rated 2.4A | Open gap — bench test recommended |
 
-**Two numbers matter here:**
-- **Boost board headroom:** PowerBoost 1000C supports up to 1A continuous / short peaks higher. Full-white 27-pixel NeoPixel bursts alone can approach or exceed that — keep animation brightness/color moderate (e.g. cap `setBrightness()` well below 255) rather than sizing for worst-case draw. This is a firmware-side constraint, not just hardware.
-- **Battery life:** the ornament is idle almost all the time between taps (RFID scanning loop only, LEDs off, no audio). Average draw is dominated by MFRC522 idle current, not animation peaks. A 2000mAh cell should comfortably run for many days of realistic seasonal use between charges.
+**Two scenarios, same hardware:**
+
+- **Properly engineered** — Pro Mini in power-down sleep, MFRC522 woken and polled ~once/second (not continuously), NeoPixels MOSFET-gated off between animations: average draw ≈ **1.3–1.5mA** on the 5V bus. Converting through the boost stage (~1.7× for voltage step-up + ~80% efficiency) → **~2.2–2.6mA off the battery**. On the 2000mAh cell: **~2–4 weeks per charge.**
+- **Unoptimized fallback** (continuous scanning, nothing power-gated) — Pro Mini ~20mA + MFRC522 ~20mA + NeoPixels ungated ~16.8mA ≈ **~57mA continuous** on the bus → battery-side ~97mA → **~18–20 hours per charge**. (Dropping audio already removed ~20mA from this fallback case vs. the earlier draft that included it.)
+
+The gap between these two numbers is entirely the firmware sleep/wake loop and the MOSFET gating — not optional nice-to-haves if multi-week runtime matters.
 
 -----
 
 ## Enclosure Impact (flag only — enclosure design is Phase 2 / WP2.2, out of scope here)
 
 - The barrel jack's 11mm panel-mount hole is replaced by a USB-C cutout for charging access.
-- PowerBoost 1000C board (~1.2" × 0.9") and the LiPo cell are new physical volume inside the shell, in addition to the Nano (18mm × 45mm). The battery is likely the largest new footprint constraint — worth checking cell dimensions against shell interior before ordering.
-- Recommend exposing the USB-C port at the same shell location/orientation as the old barrel jack (bottom, cable/access facing down) to keep the enclosure design mostly reusable.
+- Lipo Rider Plus board and the LiPo cell are new physical volume inside the shell, alongside the Pro Mini (smaller footprint than the Nano it replaces). The battery is likely the largest new footprint constraint — check cell dimensions against shell interior before ordering.
+- MOSFET driver board adds minor additional volume — small enough it shouldn't be a fit-blocker.
 
 -----
 
 ## Open Questions
 
-- Confirm the "wireless" scope assumption above (power untethering vs. something else).
-- Confirm battery chemistry preference: rechargeable LiPo (this doc) vs. disposable AA/AAA (simpler, no charge circuit, but periodic swaps and needs its own regulator to hit 5V cleanly).
-- Battery capacity vs. ornament size tradeoff — 2000mAh assumed here; confirm against actual shell interior volume once enclosure work (WP2.2) is further along.
+- Boost converter no-load quiescent current — unverified, bench-test before trusting the multi-week runtime estimate.
+- Pro Mini active-current figure — confirm against Microchip's ATmega328P datasheet directly rather than the general estimate used here.
+- Battery capacity vs. ornament size tradeoff — 2000mAh assumed; confirm against actual shell interior volume once WP2.2 enclosure work is further along.
+- Whether to add audio later — kept optional/out of baseline per this update; re-check peak-current headroom on the Lipo Rider Plus if it's added.
