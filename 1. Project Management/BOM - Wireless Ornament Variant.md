@@ -1,7 +1,7 @@
 # BOM — Wireless Ornament Variant
 
 *Created: 2026-07-07*
-*Updated: 2026-07-12*
+*Updated: 2026-08-04*
 *Status: Draft — pricing/consumption sourced, pending prototype validation*
 
 -----
@@ -22,14 +22,15 @@ Audio (DFPlayer Mini) is **optional here, same as the wired build** — not part
 | RFID Reader | MFRC522 module | ~$1.25–5 (bulk) / up to $10 (kit) | Active scan: 13–26mA · Power-down: 10µA | 3.3V, SPI |
 | NeoPixels (outer) | Adafruit NeoPixel Ring, 16px | $9.95 | Worst case: 960mA · Off (gated): ~0mA | Pin 5, NEO_GRB, 5V |
 | NeoPixels (inner) | Adafruit NeoPixel Ring, 12px (closest to spec'd 11px) | $5.25 | Worst case: 720mA · Off (gated): ~0mA | Pin 6, NEO_GRB, 5V |
-| RF Transmitter | D-FLIFE 433MHz ASK TX module ([Amazon B0BZRRBBNK](https://www.amazon.com/dp/B0BZRRBBNK), 5-pack) | ~$1–2/unit | Transmit: 20–30mA · Standby: ~0mA | Data → D8. **Power in is 3.3V, not 5V** — shares the MFRC522's 3.3V rail, not the raw 5V bus. See [RF Module Pinout - D-FLIFE 433MHz Kit.md](RF%20Module%20Pinout%20-%20D-FLIFE%20433MHz%20Kit.md) for full pinout. |
+| RF Transmitter | D-FLIFE 433MHz ASK TX module ([Amazon B0BZRRBBNK](https://www.amazon.com/dp/B0BZRRBBNK), 5-pack) | ~$1–2/unit | Transmit: 20–30mA · Standby: ~0mA | Data → D8. **Power in is 3.3V, not 5V** — shares the added 3.3V regulator's output with the MFRC522 (see next row), not the raw 5V bus. See [RF Module Pinout - D-FLIFE 433MHz Kit.md](RF%20Module%20Pinout%20-%20D-FLIFE%20433MHz%20Kit.md) for full pinout. |
+| **3.3V Regulator** | AMS1117-3.3 breakout (e.g. [Amazon](https://www.amazon.com/AMS1117-3-3V-Voltage-Regulator-soldered-4-5-7V/dp/B074FBCKH5)) | <$1/unit (sold in 2–10 packs, ~$6–10/pack) | Negligible standby; well under its 800mA rating for MFRC522+TX's combined peak (~56mA) | **Added 2026-08-04.** Pro Mini has only one onboard regulator (5V) — unlike the Nano, which has a separate 3.3V pin sourced from its USB-serial chip's own regulator. Steps the Pro Mini's 5V VCC down to 3.3V to feed the MFRC522 and RF TX module. |
 | RF Outlet | Etekcity 433MHz outlet kit | ~$25–30 | N/A — mains powered | Pre-paired before shipping; not part of ornament battery budget |
 | **Battery** | Adafruit 2000mAh 3.7V protected LiPo, JST-PH (product #2011) | $12.50 | — (source) | Onboard protection circuit (over-charge/discharge/short) confirmed |
 | **Charge/Boost** | Seeed Studio Lipo Rider Plus, 5V/2.4A, USB-C | ~$5.39–6.50 | No-load quiescent current: **unverified** — flag for bench test | Replaces PowerBoost 1000C, which is out of stock. No minimum-load auto-shutoff (dedicated project-power board, not a "smart" power bank IC) — safe for always-on/duty-cycled loads |
 | **Power gating** | Adafruit MOSFET Driver, PID 5648 (×1) | $3.95 | Gate draws ~0mA | Cuts NeoPixel VCC when not animating — the LEDs draw ~0.6mA/pixel even "off" if VCC stays connected (28px ≈ 16.8mA wasted if ungated) |
 
-**Baseline total (excl. RF outlet): ~$44–52**
-**All-in with outlet kit: ~$69–82**
+**Baseline total (excl. RF outlet): ~$45–53**
+**All-in with outlet kit: ~$70–83**
 
 ### Optional add-on: Audio (same status as wired build)
 
