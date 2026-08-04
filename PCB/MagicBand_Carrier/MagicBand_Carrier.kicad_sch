@@ -3258,7 +3258,7 @@
 			(at 160 99 0)
 			(effects (font (size 1.27 1.27)))
 		)
-		(property "Value" "100nF"
+		(property "Value" "10uF"
 			(at 160 101.5 0)
 			(effects (font (size 1.27 1.27)))
 		)
@@ -3374,7 +3374,7 @@
 			(at 175 99 0)
 			(effects (font (size 1.27 1.27)))
 		)
-		(property "Value" "100nF"
+		(property "Value" "1.0uF"
 			(at 175 101.5 0)
 			(effects (font (size 1.27 1.27)))
 		)

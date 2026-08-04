@@ -25,6 +25,8 @@ Claude is driving KiCad directly (writing/validating the actual project files vi
 ### Stage 1 — Schematic Capture — **Done, 2026-08-04**
 Built in `PCB/MagicBand_Carrier/MagicBand_Carrier.kicad_sch`, ERC-clean (0 errors). See Session Log 2026-08-04 for the three coordinate-system bugs hit and fixed while building it (embedded-symbol naming, even-vs-odd connector pin spacing, library Y-up vs schematic Y-down). NeoPixel rings and the 5V/GND board-power-input net (J8) are represented; 5V/GND get `PWR_FLAG` markers since their real source (Lipo Rider Plus) is off-board.
 
+**Independent review, 2026-08-04**: a separate pass (not the builder) checked the schematic against real datasheets rather than just internal consistency. MOSFET topology, MFRC522 pin wiring, and power/ground net separation all confirmed correct against Adafruit's PID 5648 docs, a real RC522 breakout pinout, and the exported netlist respectively. One real problem found and fixed: the MCP1700-3302's decoupling caps (C1 input, C2 output) were both 100nF, but Microchip's datasheet (DS20001826) specifies 1.0µF as the standard/minimum **output** cap for stability -- undersized output capacitance risks oscillation, and the MFRC522's active-scan current step (13-26mA) is exactly the kind of load transient that stresses that margin. Fixed: C2 -> 1.0µF (datasheet-specified), C1 -> 10µF (typical reference-design input sizing for this part, not itself a stability requirement but good headroom against transient sag). Re-ran ERC after the fix -- still 0 errors, same 120 cosmetic warnings.
+
 ### Stage 2 — Footprints
 
 | Part | Footprint status | Confidence |
