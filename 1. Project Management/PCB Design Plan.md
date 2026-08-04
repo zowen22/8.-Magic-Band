@@ -1,7 +1,7 @@
 # PCB Design Plan
 
 *Created: 2026-08-04*
-*Status: Planning — carrier board is the v1 target; fully-custom is a v2 learning exercise after v1 works*
+*Status: In Progress — v1 schematic capture (Stage 1) done and ERC-clean; layout (Stage 3) next*
 
 -----
 
@@ -22,8 +22,8 @@ Claude is driving KiCad directly (writing/validating the actual project files vi
 - KiCad 8+ (this session installed 10.0.5 via the official AppImage, extracted for `kicad-cli` access)
 - Reference tutorials if the user wants to follow along: [Zbotic "Your First PCB"](https://zbotic.in/your-first-pcb-kicad-tutorial-from-scratch-for-beginners/) for general fluency, [Zbotic "Custom Arduino PCB"](https://zbotic.in/custom-arduino-pcb-design-your-own-minimal-board/) for the exact carrier-board pattern used here
 
-### Stage 1 — Schematic Capture
-One symbol per module (Pro Mini, MFRC522, RF TX, MCP1700-3302, MOSFET driver, JST-PH battery jack), wired per the pin map in `MagicBand_Wireless/MagicBand_Wireless.ino`'s header comment.
+### Stage 1 — Schematic Capture — **Done, 2026-08-04**
+Built in `PCB/MagicBand_Carrier/MagicBand_Carrier.kicad_sch`, ERC-clean (0 errors). See Session Log 2026-08-04 for the three coordinate-system bugs hit and fixed while building it (embedded-symbol naming, even-vs-odd connector pin spacing, library Y-up vs schematic Y-down). NeoPixel rings and the 5V/GND board-power-input net (J8) are represented; 5V/GND get `PWR_FLAG` markers since their real source (Lipo Rider Plus) is off-board.
 
 ### Stage 2 — Footprints
 
