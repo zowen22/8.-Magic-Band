@@ -97,6 +97,15 @@ MFRC522 and the RF TX module stay as modules in this version too — see feasibi
 
 -----
 
+## Component Selection Audit (2026-08-04)
+
+Focused audit pass on component/connector selection for v2, to catch mismatches before layout locks in.
+
+- **Fixed**: MOSFET driver (Adafruit PID 5648) connector was drawn as a generic 2.54mm pin header — the real board uses a 3-pin STEMMA JST-PH connector at 2mm pitch (V+/GND/In together, confirmed against Adafruit's pinout docs). Incompatible pitch, would not have mated with the real cable. Fixed to `JST_PH_B3B-PH-K_1x03_P2.00mm_Vertical`, verified against KiCad's official footprint repo.
+- **Open, unverified**: Lipo Rider Plus's 5V output appears to route through its USB Type-A port rather than a simple header pin (its separate pin header explicitly outputs 3.3V, not 5V, per available docs) — J8's footprint choice on the custom board is not yet confirmed correct. Needs a direct check of Seeed's pin diagram before finalizing.
+- **Confirmed adequate, no action needed**: JST-PH library footprint availability in stock KiCad (Connector_JST.pretty, official repo) — no unofficial/community libraries needed.
+- **Assembly service note**: connectors (JST-PH, headers, ISP header) are through-hole and always hand-soldered regardless of JLCPCB assembly tier — the assembly-service cost question only ever applied to the one SMD MCP1700 part, which is also easy to hand-solder if skipping assembly entirely.
+
 ## Toolchain (this WSL environment)
 
 - KiCad 10.0.5, installed via the official AppImage (apt is blocked in this sandbox — no root available), extracted to `~/.local/opt/squashfs-root`
