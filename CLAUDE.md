@@ -26,6 +26,11 @@ When to create: two or more meaningful implementation paths need side-by-side co
 Required fields: Approach A / Approach B (each with summary, tradeoffs, effort estimate, decision criteria).  
 Rule: record the chosen approach in Project Overview Decisions Log when resolved; archive the plan file.
 
+## Orchestration Handoffs
+Check `1. Project Management/Handoffs/` for any files with `Status: Open` or `Status: Blocked`. These are execution work orders written by a planner session (see `Orchestration/Orchestration Instructions.md`). An executor session picks up an Open handoff, executes it exactly as scoped, fills in its Execution Report, and flips Status to `Done` — or `Blocked` if a Stop Condition is hit. Surface Blocked handoffs to the user immediately.
+
+The Planner role applies only when running on a high-reasoning model (Fable/Opus) and the user explicitly asks for an audit, plan, or handoff — never adopt it spontaneously. Executing Open handoffs is standard behavior for any session.
+
 ## Work Package Conventions
 - Create a new WP when work has a distinct milestone, sprint, or audit to close. Add to the existing backlog WP (e.g. WP3.1 or equivalent) for standalone improvements with no natural grouping.
 - If the project has multiple components (web + mobile, frontend + backend), prefix WP tasks with the component (e.g. `[Web]`, `[iOS]`) and add a subsection per component in Technical Reference.
@@ -40,7 +45,7 @@ Each entry should include, at minimum:
 Flag any `STARTED` entry found at session start — it means a prior session was interrupted.
 
 ## Session Start Routine
-1. Read `3. Work Packages.md`, `5. Session Log.md`, and any open Audits/ or Plans/ files to establish current state
+1. Read `3. Work Packages.md`, `5. Session Log.md`, and any open Audits/, Plans/, or Handoffs/ files to establish current state
 2. Flag any `STARTED` entry in the Session Log immediately
 3. Confirm next priorities before beginning work
 
@@ -59,6 +64,31 @@ Flag any `STARTED` entry found at session start — it means a prior session was
 - Promote significant decisions to Decisions Log in Project Overview.md
 - Keep Technical Reference.md current as decisions are made
 - Keep all files lean — capture what matters, avoid noise
+
+## Project Dashboard Compatibility
+
+This project is polled by the Project Dashboard (github.com/zowen22/X.-Claude-Project-Dashboard),
+a static site that reads two files directly from this repo's `main` branch via
+unauthenticated client-side fetch. For the dashboard to render this project correctly:
+
+- **Repo must be public.** The dashboard has no auth token — private repos can never load.
+- **Files must exist at these exact paths** (spaces included) on `main`:
+  - `1. Project Management/2. Project Overview.md`
+  - `1. Project Management/3. Work Packages.md`
+- **`2. Project Overview.md` must have:**
+  - A `## Status` heading followed by a single backticked value on the next line,
+    exactly one of: `` `Planning` ``, `` `In Progress` ``, or `` `Complete` `` — anything
+    else (or missing) shows as "Unknown" with no status color.
+  - A `## Summary` section with real prose (2-3 sentences). If it's still the template
+    placeholder (italicized instructions), the dashboard skips it and shows nothing.
+- **`3. Work Packages.md` must use standard markdown checkboxes** — `- [ ]` for open tasks,
+  `- [x]` for done. The dashboard counts all of them for the progress bar, and pulls the
+  first 5 unchecked `- [ ]` lines (in file order) as "next steps." Tag owners with `@claude`
+  or `@user` inline if you want them color-highlighted on the card.
+
+**After creating the repo, it still won't appear on the dashboard automatically** — the repo
+name has to be added to the `PROJECTS` array in the dashboard's `index.html` by hand. Flag
+this to the user when a new project is ready to go live.
 
 ## Memory vs PM Files
 The Claude memory system (`~/.claude/projects/.../memory/`) is for thin cross-session pointers only — not content. All durable knowledge lives in PM files (committed to the repo):
