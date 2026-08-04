@@ -12,14 +12,10 @@
      EN      → leave disconnected (listing: tied internally, no function)
 
    ── Usage ─────────────────────────────────────────────────────────────────
-   Default: sends a placeholder test code every 3s so you can confirm with
-   a second board running RF_Sniffer that data is actually going out over
-   the air (range, correct pin, module not dead, etc.) — this is NOT the
-   real outlet code.
-
-   To test against the actual paired outlet: capture the real ON/OFF codes
-   with RF_Sniffer first, fill them in below, then either send over Serial
-   ("o" for on, "f" for off) or let it auto-repeat.
+   CODE_ON/CODE_OFF below are real, captured codes for the outlet the tree
+   lights are plugged into (top row on the remote, verified 2026-08-03).
+   Auto-repeats CODE_ON every 3s by default; send over Serial instead
+   ("o" for on, "f" for off) to test both directions.
 */
 
 #include <RCSwitch.h>
@@ -28,12 +24,13 @@ const uint8_t TX_DATA_PIN = 8;
 
 RCSwitch rfSwitch = RCSwitch();
 
-// Placeholder — replace with real captured codes from RF_Sniffer once known
-unsigned long CODE_ON  = 5393; // 0x1511, RCSwitch example default — NOT a real outlet code
-unsigned long CODE_OFF = 5396; // 0x1514, RCSwitch example default — NOT a real outlet code
-const unsigned int BITS     = 24;
-const unsigned int PROTOCOL = 1;
-const uint8_t REPEAT_COUNT  = 5;  // no ACK on 433MHz — resend a few times
+// Real codes captured via RF_Sniffer, verified against the tree-lights outlet (top row)
+unsigned long CODE_ON  = 0x885A8F00; // 2287636224
+unsigned long CODE_OFF = 0x845A8F00; // 2220527360
+const unsigned int BITS      = 32;
+const unsigned int PROTOCOL  = 2;
+const unsigned int PULSE_LEN = 700;  // measured ~695-704us; protocol 2 library default is 650us
+const uint8_t REPEAT_COUNT   = 5;  // no ACK on 433MHz — resend a few times
 
 void sendCode(unsigned long code, const __FlashStringHelper *label) {
   rfSwitch.send(code, BITS);
@@ -50,6 +47,7 @@ void setup() {
 
   rfSwitch.enableTransmit(TX_DATA_PIN);
   rfSwitch.setProtocol(PROTOCOL);
+  rfSwitch.setPulseLength(PULSE_LEN);
   rfSwitch.setRepeatTransmit(REPEAT_COUNT);
 
   Serial.println(F("RF TX Test ready."));
@@ -70,6 +68,6 @@ void loop() {
 
   if (millis() - lastAutoSend >= AUTO_SEND_INTERVAL_MS) {
     lastAutoSend = millis();
-    sendCode(CODE_ON, F("placeholder"));
+    sendCode(CODE_ON, F("auto ON"));
   }
 }
