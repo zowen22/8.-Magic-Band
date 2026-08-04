@@ -31,9 +31,10 @@
    budget; compiled out unless ENABLE_AUDIO is defined):
      D2 → DFPlayer RX  |  D3 ← DFPlayer TX
 
-   RF codes below are placeholders — run Revisions/Sniffer (see Technical
-   Reference "RF Workflow") against the paired outlet remote and fill in
-   RF_CODE_ON / RF_CODE_OFF / RF_BITS / RF_PROTOCOL before flashing for real.
+   RF codes below were captured via RF_Sniffer against the paired outlet
+   remote's top-row ON/OFF buttons — verified against the physical outlet
+   the tree lights are plugged into (2026-08-03). Confirmed repeatable
+   across multiple presses each, not a rolling code.
 */
 
 #include <avr/sleep.h>
@@ -69,11 +70,11 @@ MFRC522 mfrc522(SS_PIN, RST_PIN);
 const uint8_t RF_PIN = 8;
 RCSwitch rfSwitch = RCSwitch();
 
-// TODO: fill in from Sniffer capture before flashing for real use
-const unsigned long RF_CODE_ON  = 0x0;
-const unsigned long RF_CODE_OFF = 0x0;
-const unsigned int  RF_BITS     = 24;
-const unsigned int  RF_PROTOCOL = 1;
+const unsigned long RF_CODE_ON   = 0x885A8F00;
+const unsigned long RF_CODE_OFF  = 0x845A8F00;
+const unsigned int  RF_BITS      = 32;
+const unsigned int  RF_PROTOCOL  = 2;
+const unsigned int  RF_PULSE_LEN = 700;  // measured ~695-704us; library default for protocol 2 is 650us
 const uint8_t        RF_REPEAT   = 5;  // 433MHz is fire-and-forget, no ACK — resend
 
 // ── DFPlayer Mini (optional) ─────────────────────────────────────────────
@@ -149,6 +150,7 @@ void spinAnimation() {
 
 void fireRfCode(unsigned long code) {
   rfSwitch.setProtocol(RF_PROTOCOL);
+  rfSwitch.setPulseLength(RF_PULSE_LEN);
   rfSwitch.setRepeatTransmit(RF_REPEAT);
   rfSwitch.send(code, RF_BITS);
 }
