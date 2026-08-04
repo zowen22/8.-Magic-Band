@@ -97,6 +97,16 @@ MFRC522 and the RF TX module stay as modules in this version too — see feasibi
 
 -----
 
+## MOSFET Integration (2026-08-04)
+
+Decision: the Adafruit MOSFET driver module (external, JST-PH connector) is now **replaced with an integrated MOSFET switch circuit directly on the v2 board** — Q1 (N-channel logic-level MOSFET, e.g. AO3400A, SOT-23), R2 (100R gate series resistor), R3 (10k gate pull-down, ensures the NeoPixels default OFF if D7 floats during boot/reset before firmware drives it). Same low-side-switching topology as before (V+ passes through to the rings continuously, drain switches the GND_SW return) — verified in the exported netlist that J6/J7 (NeoPixel headers) still connect to the same GND_SW net, now through Q1's drain instead of an external module's pin.
+
+Rationale: unlike the RFID/RF modules (real antenna engineering, stay external), a MOSFET switch is basic, well-understood circuit design — integrating it removes a whole module + connector from the BOM and is low risk. Confirmed via ERC (0 errors, 208 warnings, same cosmetic categories as before, +2 from the added parts) and independent netlist inspection, not just ERC passing.
+
+Note: Q1 is represented as a generic labeled 3-pin placeholder (SOT-23 footprint, pins named Gate/Drain/Source in the Value field) rather than a vendor-specific symbol, matching this project's established convention for parts where footprint-perfect precision is deferred to layout stage (same treatment as the Pro Mini and RF TX module). The exact SOT-23 pad-to-G/D/S mapping for the specific part chosen still needs final confirmation against its datasheet at layout time.
+
+The PCB layout (component placement/routing) for v2 needs to be redone fresh against this updated schematic — the prior layout attempt was based on the old J4/J5 netlist and has been removed as stale.
+
 ## Component Selection Audit (2026-08-04)
 
 Focused audit pass on component/connector selection for v2, to catch mismatches before layout locks in.

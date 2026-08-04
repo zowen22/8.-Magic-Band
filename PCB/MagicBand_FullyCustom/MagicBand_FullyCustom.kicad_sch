@@ -4317,16 +4317,16 @@
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(uuid "1a7a7d92-1d30-409b-a70d-946d87b436a7")
-		(property "Reference" "J4"
+		(uuid "9e425a36-72fa-4551-8a48-b776226ba902")
+		(property "Reference" "Q1"
 			(at 250 64 0)
 			(effects (font (size 1.27 1.27)))
 		)
-		(property "Value" "MOSFET_DRV_IN"
+		(property "Value" "AO3400A_NMOS_G-D-S"
 			(at 250 66.5 0)
 			(effects (font (size 1.27 1.27)))
 		)
-		(property "Footprint" "Connector_JST:JST_PH_B3B-PH-K_1x03_P2.00mm_Vertical"
+		(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
 			(at 250 70 0)
 			(effects (font (size 1.27 1.27)) (hide yes))
 		)
@@ -4334,53 +4334,13 @@
 			(at 250 70 0)
 			(effects (font (size 1.27 1.27)) (hide yes))
 		)
-		(pin "1" (uuid "4cf55b10-0d66-4032-8d98-5908f019e709"))
-		(pin "2" (uuid "8911b398-9475-4d15-b3eb-90f588b04dc8"))
-		(pin "3" (uuid "223d5712-3d42-4a63-a633-1ea554ecdeab"))
+		(pin "1" (uuid "47b4e659-1fa5-4336-b52f-677060915aa2"))
+		(pin "2" (uuid "b140f0ab-2492-481d-b59b-8ef0fb316854"))
+		(pin "3" (uuid "7f9a4068-dc2a-4a83-b700-ca701c25ad73"))
 		(instances
 			(project "MagicBand_FullyCustom"
 				(path "/bcfef247-dfd6-4ae3-b42f-2bc22ccfcf8a"
-					(reference "J4")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(wire
-		(pts (xy 244.92 67.46) (xy 247.46 67.46))
-		(stroke (width 0) (type default))
-		(uuid "b5676162-49ff-4353-9122-3ccd0c5a1def")
-	)
-	(symbol
-		(lib_id "power:+5V")
-		(at 247.46 67.46 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "0b3bebef-edd4-426e-8bd6-b7e642ed13c9")
-		(property "Reference" "#PWR0b3b"
-			(at 247.46 63.959999999999994 0)
-			(effects (font (size 1.27 1.27)) (hide yes))
-		)
-		(property "Value" "+5V"
-			(at 247.46 69.96 0)
-			(effects (font (size 1.27 1.27)))
-		)
-		(property "Footprint" ""
-			(at 247.46 67.46 0)
-			(effects (font (size 1.27 1.27)) (hide yes))
-		)
-		(property "Datasheet" ""
-			(at 247.46 67.46 0)
-			(effects (font (size 1.27 1.27)) (hide yes))
-		)
-		(pin "1" (uuid "a63fceb4-151c-41c9-94aa-408e44be8dda"))
-		(instances
-			(project "MagicBand_FullyCustom"
-				(path "/bcfef247-dfd6-4ae3-b42f-2bc22ccfcf8a"
-					(reference "#PWR0b3b")
+					(reference "Q1")
 					(unit 1)
 				)
 			)
@@ -4389,142 +4349,188 @@
 	(wire
 		(pts (xy 244.92 70.0) (xy 247.46 70.0))
 		(stroke (width 0) (type default))
-		(uuid "7d62eee1-3525-4b06-bae5-4a5dca224452")
-	)
-	(symbol
-		(lib_id "power:GND")
-		(at 247.46 70.0 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "bc690d69-dbae-4533-8db6-ded8080cc0e4")
-		(property "Reference" "#PWRbc69"
-			(at 247.46 66.5 0)
-			(effects (font (size 1.27 1.27)) (hide yes))
-		)
-		(property "Value" "GND"
-			(at 247.46 67.23 0)
-			(effects (font (size 1.27 1.27)))
-		)
-		(property "Footprint" ""
-			(at 247.46 70.0 0)
-			(effects (font (size 1.27 1.27)) (hide yes))
-		)
-		(property "Datasheet" ""
-			(at 247.46 70.0 0)
-			(effects (font (size 1.27 1.27)) (hide yes))
-		)
-		(pin "1" (uuid "192f6a67-0dff-4891-99da-bdd8375306d8"))
-		(instances
-			(project "MagicBand_FullyCustom"
-				(path "/bcfef247-dfd6-4ae3-b42f-2bc22ccfcf8a"
-					(reference "#PWRbc69")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(wire
-		(pts (xy 244.92 72.54) (xy 250.0 72.54))
-		(stroke (width 0) (type default))
-		(uuid "9e0dd82e-9c1e-46e9-a7ff-f71ecd57593b")
-	)
-	(global_label "D7"
-		(shape passive)
-		(at 250.0 72.54 0)
-		(fields_autoplaced yes)
-		(effects (font (size 1.27 1.27)) (justify left))
-		(uuid "34ce6f38-cce2-4fb3-b842-dd0ce29cab58")
-	)
-	(symbol
-		(lib_id "Connector_Generic:Conn_01x02")
-		(at 290 70 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "0d092c75-e728-437d-8fcb-72cc0b00ec8b")
-		(property "Reference" "J5"
-			(at 290 64 0)
-			(effects (font (size 1.27 1.27)))
-		)
-		(property "Value" "MOSFET_DRV_OUT"
-			(at 290 66.5 0)
-			(effects (font (size 1.27 1.27)))
-		)
-		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
-			(at 290 70 0)
-			(effects (font (size 1.27 1.27)) (hide yes))
-		)
-		(property "Datasheet" ""
-			(at 290 70 0)
-			(effects (font (size 1.27 1.27)) (hide yes))
-		)
-		(pin "1" (uuid "fe905c3d-3945-4a35-a3b9-28b1b49fe0af"))
-		(pin "2" (uuid "19384d58-170e-4050-a8ec-8782c947fd1f"))
-		(instances
-			(project "MagicBand_FullyCustom"
-				(path "/bcfef247-dfd6-4ae3-b42f-2bc22ccfcf8a"
-					(reference "J5")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(wire
-		(pts (xy 284.92 70.0) (xy 287.46 70.0))
-		(stroke (width 0) (type default))
-		(uuid "f416b5bd-4206-4df5-b5aa-ff8d50321a74")
-	)
-	(symbol
-		(lib_id "power:+5V")
-		(at 287.46 70.0 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "178fbe38-e3a2-4fe8-b2e4-d58f5526fddc")
-		(property "Reference" "#PWR178f"
-			(at 287.46 66.5 0)
-			(effects (font (size 1.27 1.27)) (hide yes))
-		)
-		(property "Value" "+5V"
-			(at 287.46 72.5 0)
-			(effects (font (size 1.27 1.27)))
-		)
-		(property "Footprint" ""
-			(at 287.46 70.0 0)
-			(effects (font (size 1.27 1.27)) (hide yes))
-		)
-		(property "Datasheet" ""
-			(at 287.46 70.0 0)
-			(effects (font (size 1.27 1.27)) (hide yes))
-		)
-		(pin "1" (uuid "85d88635-d1b1-4471-afac-a46ec7dfa5c3"))
-		(instances
-			(project "MagicBand_FullyCustom"
-				(path "/bcfef247-dfd6-4ae3-b42f-2bc22ccfcf8a"
-					(reference "#PWR178f")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(wire
-		(pts (xy 284.92 72.54) (xy 290.0 72.54))
-		(stroke (width 0) (type default))
-		(uuid "3a96a1b7-23cb-4621-90a4-ff80800b28c9")
+		(uuid "7b4ec5d0-94cf-4276-900c-ea0d4e0eb4f2")
 	)
 	(global_label "GND_SW"
 		(shape passive)
-		(at 290.0 72.54 0)
+		(at 247.46 70.0 0)
 		(fields_autoplaced yes)
 		(effects (font (size 1.27 1.27)) (justify left))
-		(uuid "beacc98c-7c01-4858-ba9c-ac239bf6fbc7")
+		(uuid "d25e96a3-d355-478d-9721-c1cf05a35147")
+	)
+	(wire
+		(pts (xy 244.92 72.54) (xy 247.46 72.54))
+		(stroke (width 0) (type default))
+		(uuid "d6f9ce25-544c-4709-83bc-17e96b08e136")
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 247.46 72.54 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "b2046874-5696-48f1-88bc-ccd0bca0b934")
+		(property "Reference" "#PWRQ1S"
+			(at 247.46 69.04 0)
+			(effects (font (size 1.27 1.27)) (hide yes))
+		)
+		(property "Value" "GND"
+			(at 247.46 75.04 0)
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "Footprint" ""
+			(at 247.46 72.54 0)
+			(effects (font (size 1.27 1.27)) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 247.46 72.54 0)
+			(effects (font (size 1.27 1.27)) (hide yes))
+		)
+		(pin "1" (uuid "d1583952-356f-42c9-acf7-7bd3afd8734d"))
+		(instances
+			(project "MagicBand_FullyCustom"
+				(path "/bcfef247-dfd6-4ae3-b42f-2bc22ccfcf8a"
+					(reference "#PWRQ1S")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(wire
+		(pts (xy 220 71.27) (xy 244.92 67.46))
+		(stroke (width 0) (type default))
+		(uuid "d600c457-1538-4f09-b60f-d7d6792c6ecc")
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 220 67.46 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "1678b736-6a90-4726-ae5b-0e2ddc2eae77")
+		(property "Reference" "R2"
+			(at 220 61.46 0)
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "Value" "100R"
+			(at 220 63.96 0)
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "Footprint" "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal"
+			(at 220 67.46 0)
+			(effects (font (size 1.27 1.27)) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 220 67.46 0)
+			(effects (font (size 1.27 1.27)) (hide yes))
+		)
+		(pin "1" (uuid "ed75d584-512e-4aea-8a3e-d46a46b34f74"))
+		(pin "2" (uuid "dbc481e0-56a9-4d89-b078-9da0c803a9ce"))
+		(instances
+			(project "MagicBand_FullyCustom"
+				(path "/bcfef247-dfd6-4ae3-b42f-2bc22ccfcf8a"
+					(reference "R2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(wire
+		(pts (xy 220 63.65) (xy 220 60.0))
+		(stroke (width 0) (type default))
+		(uuid "1151d4d7-259f-476a-b5bc-1303e8f252b0")
+	)
+	(global_label "D7"
+		(shape passive)
+		(at 220 60.0 0)
+		(fields_autoplaced yes)
+		(effects (font (size 1.27 1.27)) (justify left))
+		(uuid "8c71488f-05ca-42b7-8c15-3a7bbf4f6ed1")
+	)
+	(wire
+		(pts (xy 220 93.81) (xy 220 100.0))
+		(stroke (width 0) (type default))
+		(uuid "ee6fc1da-4a0c-428c-bcfc-1da3c292ac4f")
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 220 100.0 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "e502b89d-ffda-47ea-a168-35e53c6b12ee")
+		(property "Reference" "#PWRR3"
+			(at 220 96.5 0)
+			(effects (font (size 1.27 1.27)) (hide yes))
+		)
+		(property "Value" "GND"
+			(at 220 103.0 0)
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "Footprint" ""
+			(at 220 100.0 0)
+			(effects (font (size 1.27 1.27)) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 220 100.0 0)
+			(effects (font (size 1.27 1.27)) (hide yes))
+		)
+		(pin "1" (uuid "0e6e20ed-da42-4672-a42c-9b09a2756675"))
+		(instances
+			(project "MagicBand_FullyCustom"
+				(path "/bcfef247-dfd6-4ae3-b42f-2bc22ccfcf8a"
+					(reference "#PWRR3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(wire
+		(pts (xy 220 86.19) (xy 244.92 67.46))
+		(stroke (width 0) (type default))
+		(uuid "6379f73d-90b2-4409-8774-7d799b965f71")
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 220 90.0 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "8058f9c6-f290-49fe-a7e6-feb09285d434")
+		(property "Reference" "R3"
+			(at 220 84.0 0)
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "Value" "10k"
+			(at 220 86.5 0)
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "Footprint" "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal"
+			(at 220 90.0 0)
+			(effects (font (size 1.27 1.27)) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 220 90.0 0)
+			(effects (font (size 1.27 1.27)) (hide yes))
+		)
+		(pin "1" (uuid "d1bfcbe3-5c4a-40d5-ba11-058f2f372731"))
+		(pin "2" (uuid "3fe26087-4825-407c-b392-1434811a81c4"))
+		(instances
+			(project "MagicBand_FullyCustom"
+				(path "/bcfef247-dfd6-4ae3-b42f-2bc22ccfcf8a"
+					(reference "R3")
+					(unit 1)
+				)
+			)
+		)
 	)
 	(symbol
 		(lib_id "Connector_Generic:Conn_01x03")
