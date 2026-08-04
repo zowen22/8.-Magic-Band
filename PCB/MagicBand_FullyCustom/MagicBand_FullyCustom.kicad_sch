@@ -2877,7 +2877,7 @@
 			(at 170 96.5 0)
 			(effects (font (size 1.27 1.27)))
 		)
-		(property "Footprint" "Capacitor_THT:C_Disc_D3.0mm_W2.5mm_P2.50mm"
+		(property "Footprint" "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm"
 			(at 170 100 0)
 			(effects (font (size 1.27 1.27)) (hide yes))
 		)
@@ -4326,7 +4326,7 @@
 			(at 250 66.5 0)
 			(effects (font (size 1.27 1.27)))
 		)
-		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical"
+		(property "Footprint" "Connector_JST:JST_PH_B3B-PH-K_1x03_P2.00mm_Vertical"
 			(at 250 70 0)
 			(effects (font (size 1.27 1.27)) (hide yes))
 		)
