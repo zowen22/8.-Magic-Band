@@ -2,7 +2,7 @@
 
 *Created: 2026-07-07*
 *Updated: 2026-08-04*
-*Status: Draft — pricing/consumption sourced, pending prototype validation*
+*Status: **PAUSED 2026-08-04** — LiPo batteries carry real shipping/hazmat friction and marketplace listing restrictions (Etsy) if this becomes a sellable product. Not abandoned, may revisit if that constraint changes. Preserved as-is for reference; project has pivoted to a barrel-jack/wall-powered architecture. RFID/RF-transmitter/NeoPixel component choices below remain directly relevant regardless of power architecture — only the battery/charging section (LiPo, Lipo Rider Plus) and the battery-driven firmware complexity (sleep/wake, MOSFET gating) are specific to this paused variant.*
 
 -----
 

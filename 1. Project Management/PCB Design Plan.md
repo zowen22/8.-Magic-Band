@@ -1,7 +1,7 @@
 # PCB Design Plan
 
 *Created: 2026-08-04*
-*Status: In Progress — v1 and v2 schematic capture (Stage 1) both done and ERC-clean; layout (Stage 3) next for either*
+*Status: **PAUSED 2026-08-04** — project pivoted back to a barrel-jack/wall-powered architecture (LiPo shipping/hazmat + Etsy listing concerns, see `2. Project Overview.md` Decisions Log). Both schematics below (v1 carrier board, v2 fully-custom) are preserved as reference, not deleted — the RFID/RF-TX wiring, connector-fit findings (JST-PH pitch mismatch catch), and MOSFET integration all carry forward to whatever board follows. Battery-specific content (regulator quiescent-current optimization, MOSFET gating for battery life, the Pro Mini sleep/wake architecture) is not needed on wall power and can likely be dropped/simplified in a follow-on design. PCB layout was not completed for either board before this pause.*
 
 -----
 
