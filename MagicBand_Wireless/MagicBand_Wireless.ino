@@ -29,7 +29,8 @@
      MFRC522 above — this module is 3.3V-only, NOT the 5V bus)  |
      GND → GND  |  short antenna
 
-   3.3V Regulator (AMS1117-3.3 or equiv. — added 2026-08-04, see BOM):
+   3.3V Regulator (MCP1700-3302, NOT AMS1117 — its ~mA-range quiescent
+     current would dominate sleep draw; MCP1700 is 1.6uA. See BOM):
      Pro Mini has only ONE onboard regulator (5V) — unlike the Nano, it
      has no separate 3.3V pin. IN → Pro Mini VCC (5V)  |
      OUT → MFRC522 VCC + TX module PWR IN, above  |  GND → common ground
