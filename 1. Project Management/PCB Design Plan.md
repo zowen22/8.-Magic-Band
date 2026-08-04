@@ -107,6 +107,18 @@ Note: Q1 is represented as a generic labeled 3-pin placeholder (SOT-23 footprint
 
 The PCB layout (component placement/routing) for v2 needs to be redone fresh against this updated schematic — the prior layout attempt was based on the old J4/J5 netlist and has been removed as stale.
 
+## Barrel-Jack (Wall-Powered) Board (2026-08-04)
+
+**Active board**, derived from the paused v2 fully-custom battery schematic. Location: `PCB/MagicBand_BarrelJack/`.
+
+Carried forward unchanged: the ATmega328P-P (DIP-28) circuit (crystal, load caps, decoupling, reset pull-up, ISP header), MFRC522 stacking-socket connection, RF TX module wiring, the MCP1700-3302 regulator feeding the 3.3V rail for MFRC522+RF TX (its low-quiescent-current advantage is moot on wall power, but it still works fine electrically -- kept rather than force a swap for no functional reason).
+
+Removed: the MOSFET NeoPixel-gating circuit (Q1/R2/R3, the `GND_SW` net) -- existed purely to cut NeoPixel standby current for battery life, not needed on continuous wall power. NeoPixel ring headers now wire directly to the main +5V/GND rails.
+
+Power input: barrel jack, 5.5mm/2.1mm, center-positive, per the original wired-build spec in Technical Reference. Represented in the schematic as a generic 2-pin connector symbol (`Connector_Generic:Conn_01x02`) with Value "DC_Barrel_Jack_5.5x2.1mm" -- same deferred-footprint-precision convention already used for the Pro Mini and RF TX module placeholders, chosen deliberately after a real KiCad `Connector:Barrel_Jack` symbol swap caused a genuine short (both jack pins landed on the +5V net, GND left disconnected from the jack) due to a pin-geometry mismatch that wasn't obvious from ERC alone (0 errors even with the short present -- only caught by manually inspecting net membership in the exported netlist). Reverted rather than risk it; real barrel-jack footprint gets selected precisely at layout stage instead.
+
+ERC-clean: 0 errors, 194 warnings (same cosmetic categories as prior boards -- grid alignment, missing library-table config).
+
 ## Stacking Header for MFRC522 (2026-08-04)
 
 J2 (MFRC522 module connector on the v2 board) changed from a generic male pin header footprint to a **female socket strip** (`Connector_PinSocket_2.54mm:PinSocket_1x08_P2.54mm_Vertical`, verified against KiCad's official footprint repo). The MFRC522 breakout's own male header pins now plug directly into this socket, stacking the module directly onto the custom board -- like an Arduino shield -- instead of connecting via loose jumper wires. Solves the "two loose boards to mount inside the ornament" problem mechanically, without touching the RFID antenna/RF question (full chip-level MFRC522 integration was evaluated and ruled out -- see the fully-custom research section above -- real 13.56MHz antenna matching-network engineering, likely needs re-tuning once mounted, not worth the risk). Wiring/pin order unchanged, already verified correct against a real MFRC522 breakout's pinout.
