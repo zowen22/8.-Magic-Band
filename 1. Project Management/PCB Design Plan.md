@@ -107,6 +107,12 @@ Note: Q1 is represented as a generic labeled 3-pin placeholder (SOT-23 footprint
 
 The PCB layout (component placement/routing) for v2 needs to be redone fresh against this updated schematic — the prior layout attempt was based on the old J4/J5 netlist and has been removed as stale.
 
+## Stacking Header for MFRC522 (2026-08-04)
+
+J2 (MFRC522 module connector on the v2 board) changed from a generic male pin header footprint to a **female socket strip** (`Connector_PinSocket_2.54mm:PinSocket_1x08_P2.54mm_Vertical`, verified against KiCad's official footprint repo). The MFRC522 breakout's own male header pins now plug directly into this socket, stacking the module directly onto the custom board -- like an Arduino shield -- instead of connecting via loose jumper wires. Solves the "two loose boards to mount inside the ornament" problem mechanically, without touching the RFID antenna/RF question (full chip-level MFRC522 integration was evaluated and ruled out -- see the fully-custom research section above -- real 13.56MHz antenna matching-network engineering, likely needs re-tuning once mounted, not worth the risk). Wiring/pin order unchanged, already verified correct against a real MFRC522 breakout's pinout.
+
+Layout note for later: treat the area under/around where the MFRC522 module will sit similarly to the RF TX antenna keepout -- keep it clear of other tall components so the two boards can actually stack without interference.
+
 ## Component Selection Audit (2026-08-04)
 
 Focused audit pass on component/connector selection for v2, to catch mismatches before layout locks in.

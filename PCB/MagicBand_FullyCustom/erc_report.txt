@@ -1,4 +1,4 @@
-ERC report (2026-08-04T16:08:31, Encoding UTF8)
+ERC report (2026-08-04T17:19:16, Encoding UTF8)
 Report includes: Errors, Warnings
 
 ***** Sheet /
@@ -464,7 +464,7 @@ Report includes: Errors, Warnings
 [lib_symbol_issues]: The current configuration does not include the symbol library 'power'
     ; warning
     @(247.46 mm, 132.54 mm): Symbol #PWR25fc [GND]
-[footprint_link_issues]: The current configuration does not include the footprint library 'PinHeader_2.54mm'
+[footprint_link_issues]: The current configuration does not include the footprint library 'Connector_PinSocket_2.54mm'
     ; warning
     @(250.00 mm, 40.00 mm): Symbol J2 [Conn_01x08]
 [lib_symbol_issues]: The current configuration does not include the symbol library 'Connector_Generic'
