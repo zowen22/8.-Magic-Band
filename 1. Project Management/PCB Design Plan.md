@@ -82,6 +82,22 @@ Closed findings from the adversarial placement/routing review, worked by hand-ed
 
 Files: `board_top.svg`, `board_bottom.svg`, `drc_report.txt` (all re-exported/updated).
 
+## 1.9 Handoff to GUI for Routing (2026-08-05)
+
+**FreeRouting (headless autorouting) is not viable in this environment** -- confirmed, not just untried. Java + FreeRouting itself work fine (portable JRE installable without root), but `kicad-cli pcb export` has no Specctra DSN export subcommand in KiCad 10.0.5 -- that export is GUI-only (File -> Export -> Specctra DSN), so there's no way to hand a board to an autorouter headlessly here. User is doing final routing themselves in a real KiCad GUI session.
+
+**Current DRC state at handoff: 202 violations.** Categorized so this isn't a cold, unexplained number when the GUI opens it:
+
+*Will very likely resolve once real routing replaces the current scripted point-to-point tracks* -- not real design problems, artifacts of the routing method: `solder_mask_bridge` (101), `shorting_items` (27), `tracks_crossing` (20), `clearance` (11), `track_dangling` (2), `hole_clearance` (13).
+
+*Needs explicit attention, won't auto-resolve from routing alone*:
+- `npth_inside_courtyard` (3) -- **confirmed real**, not a false alarm: MH1 (3,37) overlaps J8's (barrel jack) courtyard, MH3 (37,20) overlaps both J6 and J7's (NeoPixel JST connectors) courtyards. Only MH2 is genuinely clear. Nudge MH1/MH3 visually in the GUI -- deliberately not fixed blindly via headless coordinate edit, this file has already had enough coordinate-math mistakes from that approach and a 40x40mm board benefits from visual placement judgment here.
+- `silk_over_copper` / `silk_overlap` / `silk_edge_clearance` (18 total) -- leftover label-position collisions from un-hiding all 20 reference designators. Quick manual drags in the GUI.
+- `items_not_allowed` (4) -- checked one instance: a 29.5mm `+3V3` track still sits inside the RF antenna keepout zone despite an earlier reroute attempt. **Matters for RF performance, not just DRC** -- explicitly re-verify nothing crosses that keepout zone before finalizing routing there.
+- `lib_footprint_issues` (3) -- cosmetic, missing local footprint-library-table reference for "MountingHole." Doesn't affect the physical board.
+
+**Do this early in the GUI session, before trusting what the ground copper looks like**: the GND zone's stored fill is stale relative to the antenna keepout zone added this round (no headless "refill zones" tool exists here) -- run a **Refill All Zones** pass first.
+
 ## 2. Firmware: `MagicBand_BarrelJack.ino`
 
 Split off from the older `MagicBand_Wireless.ino` (battery-variant sketch) rather than continuing to edit a misleadingly-named sketch for a now wall-powered board. Removed: the ~1Hz sleep/wake watchdog loop and the MOSFET NeoPixel-gating calls -- both existed purely to conserve battery current, which a continuously wall-powered board doesn't need to manage. Their removal also fixed a real UX regression: the old 1Hz polling meant up to a ~1 second delay between tapping a card and the ornament responding, with zero remaining upside once battery life stopped being a constraint. RFID-read, RF-fire, and NeoPixel animation logic is unchanged in behavior. A small idle delay (50ms) was added between poll cycles so the RFID reader isn't hammered with literally zero gap.
