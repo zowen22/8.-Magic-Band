@@ -1,4 +1,4 @@
-ERC report (2026-08-04T22:11:52, Encoding UTF8)
+ERC report (2026-08-04T23:49:14, Encoding UTF8)
 Report includes: Errors, Warnings
 
 ***** Sheet /
@@ -110,7 +110,7 @@ Report includes: Errors, Warnings
 [lib_symbol_issues]: The current configuration does not include the symbol library 'power'
     ; warning
     @(140.00 mm, 143.73 mm): Symbol #PWR8dbf [+5V]
-[footprint_link_issues]: The current configuration does not include the footprint library 'Resistor_THT'
+[footprint_link_issues]: The current configuration does not include the footprint library 'Resistor_SMD'
     ; warning
     @(140.00 mm, 145.00 mm): Symbol R1 [R]
 [lib_symbol_issues]: The current configuration does not include the symbol library 'Device'
@@ -275,7 +275,7 @@ Report includes: Errors, Warnings
 [lib_symbol_issues]: The current configuration does not include the symbol library 'power'
     ; warning
     @(170.00 mm, 98.73 mm): Symbol #PWR90d4 [+5V]
-[footprint_link_issues]: The current configuration does not include the footprint library 'Capacitor_THT'
+[footprint_link_issues]: The current configuration does not include the footprint library 'Capacitor_SMD'
     ; warning
     @(170.00 mm, 100.00 mm): Symbol C5 [C]
 [lib_symbol_issues]: The current configuration does not include the symbol library 'Device'
@@ -323,7 +323,7 @@ Report includes: Errors, Warnings
 [endpoint_off_grid]: Symbol pin or wire end off connection grid
     ; warning
     @(220.00 mm, 177.46 mm): Symbol R2 Pin 1 [Passive, Line]
-[footprint_link_issues]: The current configuration does not include the footprint library 'Resistor_THT'
+[footprint_link_issues]: The current configuration does not include the footprint library 'Resistor_SMD'
     ; warning
     @(220.00 mm, 181.27 mm): Symbol R2 [R]
 [lib_symbol_issues]: The current configuration does not include the symbol library 'Device'
