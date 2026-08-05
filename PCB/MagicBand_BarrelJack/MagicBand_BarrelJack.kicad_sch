@@ -4593,7 +4593,7 @@
 		)
 	)
 	(wire
-		(pts (xy 244.92 130.0) (xy 244.92 182.54))
+		(pts (xy 244.92 130.0) (xy 244.92 180.0))
 		(stroke (width 0) (type default))
 		(uuid "851f5fd5-7ef4-4a39-b1a6-e6ba68247582")
 	)
@@ -4603,7 +4603,7 @@
 		(uuid "851f5fd5-7ef4-4a39-b1a6-e6ba68247584")
 	)
 	(wire
-		(pts (xy 244.92 182.54) (xy 250 182.54))
+		(pts (xy 244.92 180.0) (xy 250 180.0))
 		(stroke (width 0) (type default))
 		(uuid "851f5fd5-7ef4-4a39-b1a6-e6ba68247583")
 	)
@@ -4620,7 +4620,7 @@
 			(at 250 174 0)
 			(effects (font (size 1.27 1.27)))
 		)
-		(property "Value" "AO3401A_PMOS_G-D-S"
+		(property "Value" "AO3401A_PMOS_G-S-D"
 			(at 250 176.5 0)
 			(effects (font (size 1.27 1.27)))
 		)
@@ -4650,13 +4650,13 @@
 		(uuid "b1b1b1b1-1111-4111-8111-111111111111")
 	)
 	(wire
-		(pts (xy 244.92 180.0) (xy 247.46 180.0))
+		(pts (xy 244.92 182.54) (xy 247.46 182.54))
 		(stroke (width 0) (type default))
 		(uuid "b2b2b2b2-2222-4222-8222-222222222222")
 	)
 	(symbol
 		(lib_id "power:+5V")
-		(at 247.46 180.0 0)
+		(at 247.46 182.54 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4664,19 +4664,19 @@
 		(dnp no)
 		(uuid "c1c1c1c1-1111-4111-8111-111111111111")
 		(property "Reference" "#PWRQ1D"
-			(at 247.46 176.5 0)
+			(at 247.46 179.04 0)
 			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Value" "+5V"
-			(at 247.46 182.5 0)
+			(at 247.46 185.04 0)
 			(effects (font (size 1.27 1.27)))
 		)
 		(property "Footprint" ""
-			(at 247.46 180.0 0)
+			(at 247.46 182.54 0)
 			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Datasheet" ""
-			(at 247.46 180.0 0)
+			(at 247.46 182.54 0)
 			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(pin "1" (uuid "c2c2c2c2-2222-4222-8222-222222222222"))
@@ -4690,13 +4690,13 @@
 		)
 	)
 	(wire
-		(pts (xy 247.46 180.0) (xy 247.46 178.0))
+		(pts (xy 247.46 182.54) (xy 247.46 180.54))
 		(stroke (width 0) (type default))
 		(uuid "a4a4a4a4-4444-4444-8444-444444444444")
 	)
 	(symbol
 		(lib_id "power:PWR_FLAG")
-		(at 247.46 178.0 0)
+		(at 247.46 180.54 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4704,19 +4704,19 @@
 		(dnp no)
 		(uuid "a5a5a5a5-5555-4555-8555-555555555555")
 		(property "Reference" "#FLGQ1D"
-			(at 247.46 174.5 0)
+			(at 247.46 177.04 0)
 			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Value" "PWR_FLAG"
-			(at 247.46 176.34 0)
+			(at 247.46 178.88 0)
 			(effects (font (size 1.27 1.27)))
 		)
 		(property "Footprint" ""
-			(at 247.46 178.0 0)
+			(at 247.46 180.54 0)
 			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Datasheet" ""
-			(at 247.46 178.0 0)
+			(at 247.46 180.54 0)
 			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(pin "1" (uuid "a6a6a6a6-6666-4666-8666-666666666666"))

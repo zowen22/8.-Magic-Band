@@ -1,4 +1,4 @@
-ERC report (2026-08-04T21:32:28, Encoding UTF8)
+ERC report (2026-08-04T22:11:52, Encoding UTF8)
 Report includes: Errors, Warnings
 
 ***** Sheet /
@@ -379,7 +379,7 @@ Report includes: Errors, Warnings
     @(244.92 mm, 130.00 mm): Symbol J8 Pin 1 [Pin_1, Passive, Line]
 [endpoint_off_grid]: Symbol pin or wire end off connection grid
     ; warning
-    @(244.92 mm, 130.00 mm): Vertical Wire, length 52.54 mm
+    @(244.92 mm, 130.00 mm): Vertical Wire, length 50.00 mm
 [endpoint_off_grid]: Symbol pin or wire end off connection grid
     ; warning
     @(244.92 mm, 130.00 mm): Horizontal Wire, length 2.54 mm
@@ -391,10 +391,10 @@ Report includes: Errors, Warnings
     @(244.92 mm, 177.46 mm): Symbol Q1 Pin 1 [Pin_1, Passive, Line]
 [endpoint_off_grid]: Symbol pin or wire end off connection grid
     ; warning
-    @(244.92 mm, 180.00 mm): Horizontal Wire, length 2.54 mm
+    @(244.92 mm, 180.00 mm): Horizontal Wire, length 5.08 mm
 [endpoint_off_grid]: Symbol pin or wire end off connection grid
     ; warning
-    @(244.92 mm, 182.54 mm): Horizontal Wire, length 5.08 mm
+    @(244.92 mm, 182.54 mm): Horizontal Wire, length 2.54 mm
 [endpoint_off_grid]: Symbol pin or wire end off connection grid
     ; warning
     @(247.46 mm, 45.08 mm): Symbol #PWRa902 Pin 1 [Power input, Line]
@@ -439,19 +439,19 @@ Report includes: Errors, Warnings
     @(247.46 mm, 132.54 mm): Symbol #PWR25fc [GND]
 [endpoint_off_grid]: Symbol pin or wire end off connection grid
     ; warning
-    @(247.46 mm, 178.00 mm): Symbol #FLGQ1D Pin 1 [Power output, Line]
+    @(247.46 mm, 180.54 mm): Symbol #FLGQ1D Pin 1 [Power output, Line]
 [lib_symbol_issues]: The current configuration does not include the symbol library 'power'
     ; warning
-    @(247.46 mm, 178.00 mm): Symbol #FLGQ1D [PWR_FLAG]
+    @(247.46 mm, 180.54 mm): Symbol #FLGQ1D [PWR_FLAG]
 [endpoint_off_grid]: Symbol pin or wire end off connection grid
     ; warning
-    @(247.46 mm, 180.00 mm): Vertical Wire, length 2.00 mm
+    @(247.46 mm, 182.54 mm): Vertical Wire, length 2.00 mm
 [endpoint_off_grid]: Symbol pin or wire end off connection grid
     ; warning
-    @(247.46 mm, 180.00 mm): Symbol #PWRQ1D Pin 1 [Power input, Line]
+    @(247.46 mm, 182.54 mm): Symbol #PWRQ1D Pin 1 [Power input, Line]
 [lib_symbol_issues]: The current configuration does not include the symbol library 'power'
     ; warning
-    @(247.46 mm, 180.00 mm): Symbol #PWRQ1D [+5V]
+    @(247.46 mm, 182.54 mm): Symbol #PWRQ1D [+5V]
 [footprint_link_issues]: The current configuration does not include the footprint library 'Connector_PinSocket_2.54mm'
     ; warning
     @(250.00 mm, 40.00 mm): Symbol J2 [Conn_01x08]
@@ -484,7 +484,7 @@ Report includes: Errors, Warnings
     @(250.00 mm, 180.00 mm): Symbol Q1 [Conn_01x03]
 [unconnected_wire_endpoint]: Unconnected wire endpoint
     ; warning
-    @(244.92 mm, 182.54 mm): Horizontal Wire, length 5.08 mm
+    @(244.92 mm, 180.00 mm): Horizontal Wire, length 5.08 mm
 [endpoint_off_grid]: Symbol pin or wire end off connection grid
     ; warning
     @(279.84 mm, 130.00 mm): Symbol #PWR5cc6 Pin 1 [Power input, Line]

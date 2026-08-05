@@ -161,4 +161,6 @@ void setup() {
 
 void loop() {
   pollCardOnce();
+  delay(50);  // small idle margin between soft-power-up/down cycles -- MFRC522 wasn't
+              // characterized for zero-gap continuous power-cycling, so don't hammer it
 }

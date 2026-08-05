@@ -5,6 +5,18 @@
 
 -----
 
+## Reverse-Polarity Protection: Source/Drain Pin Swap Fixed (2026-08-04)
+
+A second-round adversarial design review caught a real bug in the just-added reverse-polarity protection circuit (Q1, AO3401A ideal-diode): its Source and Drain were wired backwards relative to the real part's pinout. The schematic's Value label had assumed `G-D-S` pin order (pin2=Drain, pin3=Source); the actual AOS AO3401A datasheet is `G-S-D` (pin1=Gate, pin2=Source, pin3=Drain).
+
+This was independently confirmed by the parent session directly from the primary source -- rendered the real AOS datasheet PDF to an image locally (`pymupdf`, no root/poppler needed) and read the SOT-23 "Top View" pin diagram, rather than trusting either the circuit's original assumption or the review's claim on faith. Both agreed once verified against the actual datasheet image.
+
+As originally wired, the circuit likely would not have functioned -- possibly blocking power entirely even under correct polarity, the exact "worse than no protection" failure mode this circuit exists to avoid.
+
+**Fix**: swapped which net lands on Q1 pins 2 and 3 (pin 2 -> raw incoming lead from J8, pin 3 -> protected +5V rail; pin 1/Gate unchanged), corrected the Value label to `G-S-D`. Verified via netlist export both before and after the fix, not just ERC (which cannot catch this class of bug -- a self-consistent but backwards net assignment still passes ERC clean). ERC re-run clean afterward: 0 errors, 209 warnings, no regression.
+
+**Process note**: getting the coordinate math right took real care -- this file has a documented `kicad-cli` Y-axis quirk (see the Stage-1 entry above) that has bitten two prior rounds. This fix cross-verified the target pin's actual coordinates two independent ways (via the R2 resistor's known-good geometry, and via J6's already-netlist-confirmed Conn_01x03 pin layout) before touching anything, rather than repeating the same class of mistake a third time.
+
 ## LED Strip Connector: JST-PH (2026-08-04)
 
 J6/J7 (outer/inner ring headers) changed from generic 2.54mm pin headers to JST-PH 3-pin connectors (`JST_PH_B3B-PH-K_1x03_P2.00mm_Vertical`, same footprint family already verified for the MOSFET driver's connector). User is cutting their own WS2812B strip (confirmed 5V, 144/m, individually addressable, protocol-compatible with existing firmware) and terminating their own JST housing onto the cut ends -- board-side JST chosen for ease of connect/disconnect during assembly, per user request ("for simplicity").
@@ -56,7 +68,7 @@ Built in `PCB/MagicBand_Carrier/MagicBand_Carrier.kicad_sch`, ERC-clean (0 error
 | Arduino Pro Mini | Ready-made — [SnapEDA](https://www.snapeda.com/parts/Arduino%20Pro%20Mini/Arduino/view-part/), also [etimou/arduino-pro-mini-kicad](https://github.com/etimou/arduino-pro-mini-kicad) | High |
 | MFRC522 breakout | [SnapEDA "RFID-RC522 by Handson Technology"](https://www.snapeda.com/parts/RFID-RC522/Handson%20Technology/view-part/) | Medium-high |
 | D-FLIFE 433MHz TX module | **No footprint exists anywhere** — no datasheet, unbranded generic board. Hand-draw a 5-pad footprint from caliper measurements once the module's in hand (~30-60 min). Normal for cheap generic parts, not a blocker. | Low (expected) |
-| MCP1700-3302 | Standard SOT-23 (3-pin) — [SnapEDA MCP1700T-3302E/TT](https://www.snapeda.com/parts/MCP1700T-3302E/TT/Microchip/view-part/), or KiCad's stock `Regulator_Linear` symbol + `Package_TO_SOT_SMD:SOT-23-5` footprint | Medium-high |
+| MCP1700-3302 | Standard SOT-23 (3-pin) — [SnapEDA MCP1700T-3302E/TT](https://www.snapeda.com/parts/MCP1700T-3302E/TT/Microchip/view-part/), or KiCad's stock `Regulator_Linear` symbol + `Package_TO_SOT_SMD:SOT-23` footprint | Medium-high |
 | Adafruit MOSFET driver (PID 5648) | Full breakout, JST-PH 2mm input connector — just needs the JST-PH footprint below | High |
 | JST-PH 2-pin (battery + MOSFET driver) | Ships in stock KiCad — [KiCad/Connectors_JST.pretty](https://github.com/KiCad/Connectors_JST.pretty) | High |
 | Lipo Rider Plus | **Recommended: leave off v1 board entirely** — see Open Decisions below | N/A if excluded |
@@ -72,7 +84,7 @@ Standard KiCad DRC pass, export Gerbers/drill files (JLCPCB has a KiCad-specific
 
 ### Stage 5 — Ordering / Assembly
 - **JLCPCB**: ~$2 for 5 bare 2-layer boards + shipping, ~24hr fab (real end-to-end time with shipping likely 1-2 weeks — not independently verified). Free stencil over 5 units.
-- **Assembly service**: may place the MCP1700 SOT-23 automatically if it's in JLCPCB's SMT parts catalog (check before ordering) — otherwise hand-soldering one SOT-23-5 part is very achievable. Minimum 5pcs for an assembly-service prototype order, +2-3 days turnaround.
+- **Assembly service**: may place the MCP1700 SOT-23 automatically if it's in JLCPCB's SMT parts catalog (check before ordering) — otherwise hand-soldering one SOT-23 part is very achievable. Minimum 5pcs for an assembly-service prototype order, +2-3 days turnaround.
 
 ### Board Outline
 Don't block Stages 1-2 (schematic/footprints are dimension-independent) on shell dimensions. Do wait on those (WP2.2, still open) before finalizing the outline shape. Rough placeholder: likely comparable to or modestly larger than the Nano's existing 18x45mm footprint alone, once NeoPixel rings stay off-board — low confidence, KiCad will show the real minimum once footprints are placed.
