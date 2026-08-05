@@ -5,6 +5,13 @@
 
 -----
 
+## Physical Layout Constraint (2026-08-04, barrel-jack board) -- do not violate at layout stage
+
+- **RFID (MFRC522 stacking socket) + MCU (ATmega328P) stack must sit at the FRONT of the ornament** -- the interactive end, where the user taps their band.
+- **Barrel jack connection must be at the BACK.** The barrel jack itself is a separate panel-mount part with bare flying leads (this is how barrel jacks are most commonly available) -- it is NOT board-mounted. It mounts through the rear of the ornament shell, and its two leads run forward to solder pads on the board (J8, relabeled `PWR_IN_BarrelJack_BareLeads` in the schematic to make this explicit -- plain THT solder pads, not a purchased connector).
+- **Layout implication**: place J8 at the physical edge of the board that ends up nearest the rear of the ornament, and the MFRC522/MCU footprints at the opposite (front) edge -- board orientation inside the shell is not arbitrary, it's dictated by this front/back split.
+
+
 ## What This Is
 
 A custom PCB to replace the current point-to-point/breadboard wiring for the wireless ornament variant. Tool is KiCad. Two approaches were researched:

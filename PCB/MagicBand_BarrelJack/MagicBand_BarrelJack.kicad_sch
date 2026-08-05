@@ -4580,7 +4580,7 @@
 			(at 250 124 0)
 			(effects (font (size 1.27 1.27)))
 		)
-		(property "Value" "DC_Barrel_Jack_5.5x2.1mm"
+		(property "Value" "PWR_IN_BarrelJack_BareLeads"
 			(at 250 126.5 0)
 			(effects (font (size 1.27 1.27)))
 		)
