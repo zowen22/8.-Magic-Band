@@ -52,6 +52,20 @@ Originally chosen for its 1.6uA quiescent current (battery-life optimization). T
 
 -----
 
+## 1.7 PCB Layout: 40x40mm target MET on placement, DRC not yet clean
+
+**Board outline: 40mm x 40mm -- the aggressive target was hit.** All 20 components (U1 ATmega328P-P through J9 ISP header) placed with zero courtyard overlaps, fully within the 40x40mm outline. Verified programmatically (courtyard-rectangle overlap check across every component pair), not just visually.
+
+Two footprint swaps were needed to make 40x40mm achievable: R1 and R2 (simple resistors) and C5 (bulk cap) were originally assigned bulky THT footprints (a 10.16mm-pitch axial resistor body, a 5mm THT disc cap) inconsistent with every other passive on the board already being small SMD parts. Swapped to SMD (R_0603, C_0805) for consistency and to reclaim real board area -- same electrical function, no schematic/wiring change, ERC re-confirmed clean after each swap (still 0 errors, 209 warnings).
+
+**Placement constraints confirmed respected**: MFRC522 socket (J2) + MCU (U1) at the front (low-Y) end; barrel jack (J8) at the back (high-Y) end; RF TX module (J3) at the front-right corner with a small keepout zone beyond its own footprint (see below); MCP1700 regulator (U2) positioned near its 3.3V loads; reverse-polarity MOSFET (Q1) positioned right at the power entry point next to J8.
+
+**DRC status: NOT clean yet -- 139 violations remain (86 solder-mask-bridge, 29 tracks-crossing, 19 shorting-items, 5 clearance, 1 unconnected), down from an initial naive pass's 240.** Root cause, diagnosed not guessed: routing was done via scripted point-to-point/nearest-neighbor tracks (`pcbnew` Python API, no netlist-autorouter available in this headless environment), which cannot reliably route *around* nearby unrelated pads -- especially THT pads (like J2's and U1's pins), which physically span both copper layers, so a trace on either layer can coincide with them. This is a genuine limitation of scripted point-to-point routing on a board this component-dense, not a placement or constraint-compliance problem. GND is routed as a copper pour (zone) rather than point-to-point, which is standard practice and worked well; +5V/+3V3/signal nets are the ones still producing violations.
+
+**What this means practically**: the placement is sound and validated; the *routing* needs either (a) a real autorouter (e.g., export a Specctra DSN and run it through FreeRouting, then re-import), or (b) manual routing in KiCad's GUI, which wasn't available in this headless session. Do not treat the current `.kicad_pcb`'s routing as fab-ready -- it's a real, saved, DRC-checked starting point (not a placeholder), but genuinely not done.
+
+Files: `PCB/MagicBand_BarrelJack/MagicBand_BarrelJack.kicad_pcb`, `drc_report.txt`, `board_top.svg`, `board_bottom.svg`.
+
 ## 2. Firmware: `MagicBand_BarrelJack.ino`
 
 Split off from the older `MagicBand_Wireless.ino` (battery-variant sketch) rather than continuing to edit a misleadingly-named sketch for a now wall-powered board. Removed: the ~1Hz sleep/wake watchdog loop and the MOSFET NeoPixel-gating calls -- both existed purely to conserve battery current, which a continuously wall-powered board doesn't need to manage. Their removal also fixed a real UX regression: the old 1Hz polling meant up to a ~1 second delay between tapping a card and the ornament responding, with zero remaining upside once battery life stopped being a constraint. RFID-read, RF-fire, and NeoPixel animation logic is unchanged in behavior. A small idle delay (50ms) was added between poll cycles so the RFID reader isn't hammered with literally zero gap.
