@@ -3747,18 +3747,6 @@
 		(uuid "85b747d6-34fb-4a07-98a3-58d8ebe19a53")
 	)
 	(wire
-		(pts (xy 155.24 130.48) (xy 160.32 130.48))
-		(stroke (width 0) (type default))
-		(uuid "1602cefb-c947-4ff2-b26c-b716a2f0911b")
-	)
-	(global_label "D7"
-		(shape passive)
-		(at 160.32 130.48 0)
-		(fields_autoplaced yes)
-		(effects (font (size 1.27 1.27)) (justify left))
-		(uuid "14dc98e4-4955-43a5-89d0-569aeb0629af")
-	)
-	(wire
 		(pts (xy 155.24 69.52) (xy 160.32 69.52))
 		(stroke (width 0) (type default))
 		(uuid "0dcfe51e-9943-4c71-a797-4040d6a79b48")
@@ -3823,6 +3811,7 @@
 	(no_connect (at 155.24 117.78) (uuid "d2371697-25ab-4518-9ca1-ee92a5b7dac8"))
 	(no_connect (at 155.24 120.32) (uuid "e800d005-d276-45f8-aecb-95b8f4a6d675"))
 	(no_connect (at 155.24 74.6) (uuid "564998e7-732f-4465-8c3e-e17980e70589"))
+	(no_connect (at 155.24 130.48) (uuid "a7a7a7a7-7777-4777-8777-777777777777"))
 	(no_connect (at 155.24 92.38) (uuid "66e88504-3fbe-4f1e-8429-ab6abf4a3f91"))
 	(no_connect (at 155.24 94.92) (uuid "0962afde-fdc1-4338-ba80-92201a8a002d"))
 	(no_connect (at 155.24 97.46) (uuid "3c698aa6-d01b-46b0-b7e3-7cf6591c8a91"))
@@ -4604,40 +4593,213 @@
 		)
 	)
 	(wire
+		(pts (xy 244.92 130.0) (xy 244.92 182.54))
+		(stroke (width 0) (type default))
+		(uuid "851f5fd5-7ef4-4a39-b1a6-e6ba68247582")
+	)
+	(wire
 		(pts (xy 244.92 130.0) (xy 247.45999999999998 130.0))
 		(stroke (width 0) (type default))
-		(uuid "851f5fd5-7ef4-4a39-b1a6-e6ba68247581")
+		(uuid "851f5fd5-7ef4-4a39-b1a6-e6ba68247584")
+	)
+	(wire
+		(pts (xy 244.92 182.54) (xy 250 182.54))
+		(stroke (width 0) (type default))
+		(uuid "851f5fd5-7ef4-4a39-b1a6-e6ba68247583")
 	)
 	(symbol
-		(lib_id "power:+5V")
-		(at 247.45999999999998 130.0 0)
+		(lib_id "Connector_Generic:Conn_01x03")
+		(at 250 180 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(uuid "459dd71a-b78f-4e8c-a661-96a46378f36d")
-		(property "Reference" "#PWR459d"
-			(at 247.45999999999998 126.5 0)
-			(effects (font (size 1.27 1.27)) (hide yes))
-		)
-		(property "Value" "+5V"
-			(at 247.45999999999998 132.5 0)
+		(uuid "a1b2c3d4-e5f6-4789-a0b1-c2d3e4f5a6b7")
+		(property "Reference" "Q1"
+			(at 250 174 0)
 			(effects (font (size 1.27 1.27)))
 		)
-		(property "Footprint" ""
-			(at 247.45999999999998 130.0 0)
+		(property "Value" "AO3401A_PMOS_G-D-S"
+			(at 250 176.5 0)
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
+			(at 250 180 0)
 			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Datasheet" ""
-			(at 247.45999999999998 130.0 0)
+			(at 250 180 0)
 			(effects (font (size 1.27 1.27)) (hide yes))
 		)
-		(pin "1" (uuid "66b520e5-c193-42a0-8863-1e155ffcb3e9"))
+		(pin "1" (uuid "a1a1a1a1-1111-4111-8111-111111111111"))
+		(pin "2" (uuid "a2a2a2a2-2222-4222-8222-222222222222"))
+		(pin "3" (uuid "a3a3a3a3-3333-4333-8333-333333333333"))
 		(instances
 			(project "MagicBand_BarrelJack"
 				(path "/bcfef247-dfd6-4ae3-b42f-2bc22ccfcf8a"
-					(reference "#PWR459d")
+					(reference "Q1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(wire
+		(pts (xy 220 177.46) (xy 244.92 177.46))
+		(stroke (width 0) (type default))
+		(uuid "b1b1b1b1-1111-4111-8111-111111111111")
+	)
+	(wire
+		(pts (xy 244.92 180.0) (xy 247.46 180.0))
+		(stroke (width 0) (type default))
+		(uuid "b2b2b2b2-2222-4222-8222-222222222222")
+	)
+	(symbol
+		(lib_id "power:+5V")
+		(at 247.46 180.0 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "c1c1c1c1-1111-4111-8111-111111111111")
+		(property "Reference" "#PWRQ1D"
+			(at 247.46 176.5 0)
+			(effects (font (size 1.27 1.27)) (hide yes))
+		)
+		(property "Value" "+5V"
+			(at 247.46 182.5 0)
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "Footprint" ""
+			(at 247.46 180.0 0)
+			(effects (font (size 1.27 1.27)) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 247.46 180.0 0)
+			(effects (font (size 1.27 1.27)) (hide yes))
+		)
+		(pin "1" (uuid "c2c2c2c2-2222-4222-8222-222222222222"))
+		(instances
+			(project "MagicBand_BarrelJack"
+				(path "/bcfef247-dfd6-4ae3-b42f-2bc22ccfcf8a"
+					(reference "#PWRQ1D")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(wire
+		(pts (xy 247.46 180.0) (xy 247.46 178.0))
+		(stroke (width 0) (type default))
+		(uuid "a4a4a4a4-4444-4444-8444-444444444444")
+	)
+	(symbol
+		(lib_id "power:PWR_FLAG")
+		(at 247.46 178.0 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a5a5a5a5-5555-4555-8555-555555555555")
+		(property "Reference" "#FLGQ1D"
+			(at 247.46 174.5 0)
+			(effects (font (size 1.27 1.27)) (hide yes))
+		)
+		(property "Value" "PWR_FLAG"
+			(at 247.46 176.34 0)
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "Footprint" ""
+			(at 247.46 178.0 0)
+			(effects (font (size 1.27 1.27)) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 247.46 178.0 0)
+			(effects (font (size 1.27 1.27)) (hide yes))
+		)
+		(pin "1" (uuid "a6a6a6a6-6666-4666-8666-666666666666"))
+		(instances
+			(project "MagicBand_BarrelJack"
+				(path "/bcfef247-dfd6-4ae3-b42f-2bc22ccfcf8a"
+					(reference "#FLGQ1D")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 220 181.27 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "d1d1d1d1-1111-4111-8111-111111111111")
+		(property "Reference" "R2"
+			(at 226 181.27 0)
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "Value" "10k"
+			(at 226 183.77 0)
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "Footprint" "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal"
+			(at 220 181.27 0)
+			(effects (font (size 1.27 1.27)) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 220 181.27 0)
+			(effects (font (size 1.27 1.27)) (hide yes))
+		)
+		(pin "1" (uuid "d2d2d2d2-2222-4222-8222-222222222222"))
+		(pin "2" (uuid "d3d3d3d3-3333-4333-8333-333333333333"))
+		(instances
+			(project "MagicBand_BarrelJack"
+				(path "/bcfef247-dfd6-4ae3-b42f-2bc22ccfcf8a"
+					(reference "R2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(wire
+		(pts (xy 220 185.08) (xy 220 187.62))
+		(stroke (width 0) (type default))
+		(uuid "e1e1e1e1-1111-4111-8111-111111111111")
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 220 187.62 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "f1f1f1f1-1111-4111-8111-111111111111")
+		(property "Reference" "#PWRQ1G"
+			(at 220 184.12 0)
+			(effects (font (size 1.27 1.27)) (hide yes))
+		)
+		(property "Value" "GND"
+			(at 220 190.12 0)
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "Footprint" ""
+			(at 220 187.62 0)
+			(effects (font (size 1.27 1.27)) (hide yes))
+		)
+		(property "Datasheet" ""
+			(at 220 187.62 0)
+			(effects (font (size 1.27 1.27)) (hide yes))
+		)
+		(pin "1" (uuid "f2f2f2f2-2222-4222-8222-222222222222"))
+		(instances
+			(project "MagicBand_BarrelJack"
+				(path "/bcfef247-dfd6-4ae3-b42f-2bc22ccfcf8a"
+					(reference "#PWRQ1G")
 					(unit 1)
 				)
 			)

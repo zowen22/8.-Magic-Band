@@ -20,6 +20,8 @@ No industry-standard pin order exists for JST-terminated WS2812 strips (varies b
 
 ## Physical Layout Constraint (2026-08-04, barrel-jack board) -- do not violate at layout stage
 
+*Referenced directly from Work Packages' "PCB layout for the barrel-jack board" task -- see `3. Work Packages.md`.*
+
 - **RFID (MFRC522 stacking socket) + MCU (ATmega328P) stack must sit at the FRONT of the ornament** -- the interactive end, where the user taps their band.
 - **Barrel jack connection must be at the BACK.** The barrel jack itself is a separate panel-mount part with bare flying leads (this is how barrel jacks are most commonly available) -- it is NOT board-mounted. It mounts through the rear of the ornament shell, and its two leads run forward to solder pads on the board (J8, relabeled `PWR_IN_BarrelJack_BareLeads` in the schematic to make this explicit -- plain THT solder pads, not a purchased connector).
 - **Layout implication**: place J8 at the physical edge of the board that ends up nearest the rear of the ornament, and the MFRC522/MCU footprints at the opposite (front) edge -- board orientation inside the shell is not arbitrary, it's dictated by this front/back split.
@@ -54,7 +56,7 @@ Built in `PCB/MagicBand_Carrier/MagicBand_Carrier.kicad_sch`, ERC-clean (0 error
 | Arduino Pro Mini | Ready-made — [SnapEDA](https://www.snapeda.com/parts/Arduino%20Pro%20Mini/Arduino/view-part/), also [etimou/arduino-pro-mini-kicad](https://github.com/etimou/arduino-pro-mini-kicad) | High |
 | MFRC522 breakout | [SnapEDA "RFID-RC522 by Handson Technology"](https://www.snapeda.com/parts/RFID-RC522/Handson%20Technology/view-part/) | Medium-high |
 | D-FLIFE 433MHz TX module | **No footprint exists anywhere** — no datasheet, unbranded generic board. Hand-draw a 5-pad footprint from caliper measurements once the module's in hand (~30-60 min). Normal for cheap generic parts, not a blocker. | Low (expected) |
-| MCP1700-3302 | Standard SOT-23-5 — [SnapEDA MCP1700T-3302E/TT](https://www.snapeda.com/parts/MCP1700T-3302E/TT/Microchip/view-part/), or KiCad's stock `Regulator_Linear` symbol + `Package_TO_SOT_SMD:SOT-23-5` footprint | Medium-high |
+| MCP1700-3302 | Standard SOT-23 (3-pin) — [SnapEDA MCP1700T-3302E/TT](https://www.snapeda.com/parts/MCP1700T-3302E/TT/Microchip/view-part/), or KiCad's stock `Regulator_Linear` symbol + `Package_TO_SOT_SMD:SOT-23-5` footprint | Medium-high |
 | Adafruit MOSFET driver (PID 5648) | Full breakout, JST-PH 2mm input connector — just needs the JST-PH footprint below | High |
 | JST-PH 2-pin (battery + MOSFET driver) | Ships in stock KiCad — [KiCad/Connectors_JST.pretty](https://github.com/KiCad/Connectors_JST.pretty) | High |
 | Lipo Rider Plus | **Recommended: leave off v1 board entirely** — see Open Decisions below | N/A if excluded |
@@ -138,6 +140,14 @@ Removed: the MOSFET NeoPixel-gating circuit (Q1/R2/R3, the `GND_SW` net) -- exis
 Power input: barrel jack, 5.5mm/2.1mm, center-positive, per the original wired-build spec in Technical Reference. Represented in the schematic as a generic 2-pin connector symbol (`Connector_Generic:Conn_01x02`) with Value "DC_Barrel_Jack_5.5x2.1mm" -- same deferred-footprint-precision convention already used for the Pro Mini and RF TX module placeholders, chosen deliberately after a real KiCad `Connector:Barrel_Jack` symbol swap caused a genuine short (both jack pins landed on the +5V net, GND left disconnected from the jack) due to a pin-geometry mismatch that wasn't obvious from ERC alone (0 errors even with the short present -- only caught by manually inspecting net membership in the exported netlist). Reverted rather than risk it; real barrel-jack footprint gets selected precisely at layout stage instead.
 
 ERC-clean: 0 errors, 194 warnings (same cosmetic categories as prior boards -- grid alignment, missing library-table config).
+
+## MCP1700 Regulator: Deliberate Keep, Not Inertia (2026-08-04, from PDR)
+
+Independent PDR review confirmed the MCP1700-3302 is correctly wired and correctly decoupled -- but flagged that its original selling point (1.6uA quiescent current, chosen for the now-paused battery variant) is moot on wall power, and it's a somewhat pricier/more specialty SOT-23 LDO than a generic 3.3V regulator (e.g. AMS1117, which was rejected earlier this project specifically *because of* its high quiescent current -- a concern that no longer applies on wall power). Conclusion: **keeping MCP1700 is a conscious choice, not unexamined leftover inertia.** It works correctly, decoupling is right, and there's no compelling reason to churn the schematic further just to swap in a marginally cheaper part with no functional benefit. Recorded here so this reads as a decision, not an oversight.
+
+## MFRC522 / ISP Shared-SPI-Bus Gotcha (2026-08-04, found in PDR)
+
+MOSI/MISO/SCK are shared between the MFRC522 stacking socket (J2) and the ISP programming header (J9) -- both tap the same physical SPI bus on the ATmega328P. **Unplug the MFRC522 module before programming via ISP.** If it stays seated during a flash attempt, its presence on the bus can contend with the programmer on MISO, especially while the chip is held in reset -- a real, documented gotcha with SPI-sharing shield/stack designs, not theoretical. Worth a physical reminder label near the board, not just this doc.
 
 ## Stacking Header for MFRC522 (2026-08-04)
 
