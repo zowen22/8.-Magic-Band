@@ -5,6 +5,19 @@
 
 -----
 
+## LED Strip Connector: JST-PH (2026-08-04)
+
+J6/J7 (outer/inner ring headers) changed from generic 2.54mm pin headers to JST-PH 3-pin connectors (`JST_PH_B3B-PH-K_1x03_P2.00mm_Vertical`, same footprint family already verified for the MOSFET driver's connector). User is cutting their own WS2812B strip (confirmed 5V, 144/m, individually addressable, protocol-compatible with existing firmware) and terminating their own JST housing onto the cut ends -- board-side JST chosen for ease of connect/disconnect during assembly, per user request ("for simplicity").
+
+**Pin order, identical on both J6 and J7 -- solder the strip's wires to match this exactly:**
+| Pin | Signal |
+|---|---|
+| 1 | DATA (J6→D5 outer ring, J7→D6 inner ring) |
+| 2 | +5V |
+| 3 | GND |
+
+No industry-standard pin order exists for JST-terminated WS2812 strips (varies by manufacturer) -- since the user is terminating both the strip end and the connector end themselves, consistency with the table above is what matters, not matching some external standard.
+
 ## Physical Layout Constraint (2026-08-04, barrel-jack board) -- do not violate at layout stage
 
 - **RFID (MFRC522 stacking socket) + MCU (ATmega328P) stack must sit at the FRONT of the ornament** -- the interactive end, where the user taps their band.

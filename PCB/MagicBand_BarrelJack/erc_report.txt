@@ -1,4 +1,4 @@
-ERC report (2026-08-04T20:00:44, Encoding UTF8)
+ERC report (2026-08-04T20:06:48, Encoding UTF8)
 Report includes: Errors, Warnings
 
 ***** Sheet /
@@ -422,7 +422,7 @@ Report includes: Errors, Warnings
 [lib_symbol_issues]: The current configuration does not include the symbol library 'Connector_Generic'
     ; warning
     @(250.00 mm, 40.00 mm): Symbol J2 [Conn_01x08]
-[footprint_link_issues]: The current configuration does not include the footprint library 'Connector_PinHeader_2.54mm'
+[footprint_link_issues]: The current configuration does not include the footprint library 'Connector_JST'
     ; warning
     @(250.00 mm, 100.00 mm): Symbol J6 [Conn_01x03]
 [lib_symbol_issues]: The current configuration does not include the symbol library 'Connector_Generic'
@@ -530,7 +530,7 @@ Report includes: Errors, Warnings
 [lib_symbol_issues]: The current configuration does not include the symbol library 'Connector_Generic'
     ; warning
     @(290.00 mm, 40.00 mm): Symbol J3 [Conn_01x03]
-[footprint_link_issues]: The current configuration does not include the footprint library 'Connector_PinHeader_2.54mm'
+[footprint_link_issues]: The current configuration does not include the footprint library 'Connector_JST'
     ; warning
     @(290.00 mm, 100.00 mm): Symbol J7 [Conn_01x03]
 [lib_symbol_issues]: The current configuration does not include the symbol library 'Connector_Generic'
