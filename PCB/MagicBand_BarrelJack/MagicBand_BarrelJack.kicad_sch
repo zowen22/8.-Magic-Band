@@ -4311,7 +4311,7 @@
 			(at 250 94 0)
 			(effects (font (size 1.27 1.27)))
 		)
-		(property "Value" "NeoPixel_Outer_16px"
+		(property "Value" "NeoPixel_LED_Strip"
 			(at 250 96.5 0)
 			(effects (font (size 1.27 1.27)))
 		)
@@ -4422,135 +4422,6 @@
 			(project "MagicBand_BarrelJack"
 				(path "/bcfef247-dfd6-4ae3-b42f-2bc22ccfcf8a"
 					(reference "#PWRJ6G1")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Connector_Generic:Conn_01x03")
-		(at 290 100 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "85073b1a-8c32-4fe7-9c40-4e69f4bd8bac")
-		(property "Reference" "J7"
-			(at 290 94 0)
-			(effects (font (size 1.27 1.27)))
-		)
-		(property "Value" "NeoPixel_Inner_12px"
-			(at 290 96.5 0)
-			(effects (font (size 1.27 1.27)))
-		)
-		(property "Footprint" "Connector_JST:JST_PH_B3B-PH-K_1x03_P2.00mm_Vertical"
-			(at 290 100 0)
-			(effects (font (size 1.27 1.27)) (hide yes))
-		)
-		(property "Datasheet" ""
-			(at 290 100 0)
-			(effects (font (size 1.27 1.27)) (hide yes))
-		)
-		(pin "1" (uuid "82cfd6bb-bd6e-4bc5-9f92-6e97b3d47336"))
-		(pin "2" (uuid "a3e6b5b3-502e-480f-9f14-562e8c1bd918"))
-		(pin "3" (uuid "6c1ab6d8-5f06-4239-9c51-84dcc934ebbd"))
-		(instances
-			(project "MagicBand_BarrelJack"
-				(path "/bcfef247-dfd6-4ae3-b42f-2bc22ccfcf8a"
-					(reference "J7")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(wire
-		(pts (xy 284.92 97.46) (xy 290.0 97.46))
-		(stroke (width 0) (type default))
-		(uuid "55099f5f-ab7b-4432-bc87-2fa6d43dd267")
-	)
-	(global_label "D6"
-		(shape passive)
-		(at 290.0 97.46 0)
-		(fields_autoplaced yes)
-		(effects (font (size 1.27 1.27)) (justify left))
-		(uuid "44aff2bb-a1fe-430f-9758-e2b4899aa0c4")
-	)
-	(wire
-		(pts (xy 284.92 100.0) (xy 287.46 100.0))
-		(stroke (width 0) (type default))
-		(uuid "e5d11f51-8116-484d-9df3-28d93125e95c")
-	)
-	(symbol
-		(lib_id "power:+5V")
-		(at 287.46 100.0 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "10322061-c0f5-41ab-a2bf-6a5ac2cb41e0")
-		(property "Reference" "#PWR1032"
-			(at 287.46 96.5 0)
-			(effects (font (size 1.27 1.27)) (hide yes))
-		)
-		(property "Value" "+5V"
-			(at 287.46 102.5 0)
-			(effects (font (size 1.27 1.27)))
-		)
-		(property "Footprint" ""
-			(at 287.46 100.0 0)
-			(effects (font (size 1.27 1.27)) (hide yes))
-		)
-		(property "Datasheet" ""
-			(at 287.46 100.0 0)
-			(effects (font (size 1.27 1.27)) (hide yes))
-		)
-		(pin "1" (uuid "db22fe4d-1f6e-4ea2-9bdd-7e509fba09f5"))
-		(instances
-			(project "MagicBand_BarrelJack"
-				(path "/bcfef247-dfd6-4ae3-b42f-2bc22ccfcf8a"
-					(reference "#PWR1032")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(wire
-		(pts (xy 284.92 102.54) (xy 290.0 102.54))
-		(stroke (width 0) (type default))
-		(uuid "0c8de90b-d90d-433d-af19-99ff47cbe8b5")
-	)
-		(symbol
-		(lib_id "power:GND")
-		(at 290.0 102.54 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "2cb71876-54e4-4c2d-ae69-6ad48b7ab02a")
-		(property "Reference" "#PWRJ7G1"
-			(at 290.0 99.04 0)
-			(effects (font (size 1.27 1.27)) (hide yes))
-		)
-		(property "Value" "GND"
-			(at 290.0 105.04 0)
-			(effects (font (size 1.27 1.27)))
-		)
-		(property "Footprint" ""
-			(at 290.0 102.54 0)
-			(effects (font (size 1.27 1.27)) (hide yes))
-		)
-		(property "Datasheet" ""
-			(at 290.0 102.54 0)
-			(effects (font (size 1.27 1.27)) (hide yes))
-		)
-		(pin "1" (uuid "e805b98d-471e-492e-b7ea-61cd09adba0c"))
-		(instances
-			(project "MagicBand_BarrelJack"
-				(path "/bcfef247-dfd6-4ae3-b42f-2bc22ccfcf8a"
-					(reference "#PWRJ7G1")
 					(unit 1)
 				)
 			)
