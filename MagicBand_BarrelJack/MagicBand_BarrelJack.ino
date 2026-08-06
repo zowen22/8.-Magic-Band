@@ -12,8 +12,12 @@
      IRQ intentionally unconnected -- not used, PICC_IsNewCardPresent() is polled
 
    NeoPixels:
-     Outer ring -> D5  |  Inner ring -> D6
-     VCC wired directly to +5V, no gating -- rings are always powered
+     LED strip -> D5
+     VCC wired directly to +5V, no gating -- strip is always powered
+     (Inner ring removed 2026-08-06 -- user is sourcing an LED strip for
+     the outer position only, no second ring. D6/inner-ring wiring no
+     longer used; see PCB Design Plan.md and Work Packages WP3.1 for the
+     matching schematic/PCB change still needed.)
 
    RF Transmitter (433MHz, D-FLIFE ASK TX):
      DATA -> D8  |  PWR IN -> external 3.3V regulator output (same rail as
@@ -41,14 +45,12 @@
 #include <RCSwitch.h>
 
 // -- LED Strip Configuration ------------------------------------------------
-#define OUTER_LEDS  16
-#define INNER_LEDS  11
+// TODO: update LED_COUNT once the ordered strip's actual pixel count is known.
+#define LED_COUNT  16
 
-const uint8_t PIN_OUTER = 5;
-const uint8_t PIN_INNER = 6;
+const uint8_t PIN_LEDS = 5;
 
-Adafruit_NeoPixel outerRing(OUTER_LEDS, PIN_OUTER, NEO_GRB + NEO_KHZ800);
-Adafruit_NeoPixel innerRing(INNER_LEDS, PIN_INNER, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel leds(LED_COUNT, PIN_LEDS, NEO_GRB + NEO_KHZ800);
 
 // -- RFID --------------------------------------------------------------------
 const uint8_t RST_PIN = 9;
@@ -76,22 +78,20 @@ bool treeOn = false;
 //*******************************************************************************//
 
 void ledsOff() {
-  outerRing.fill(0);
-  outerRing.show();
-  innerRing.fill(0);
-  innerRing.show();
+  leds.fill(0);
+  leds.show();
 }
 
 void spinAnimation() {
-  for (int i = innerRing.numPixels() - 1; i >= 0; i--) {
-    if (i < innerRing.numPixels() - 1)
-      innerRing.setPixelColor(i + 1, 0);
-    innerRing.setPixelColor(i, innerRing.Color(R_IDLE, G_IDLE, B_IDLE));
-    innerRing.show();
+  for (int i = leds.numPixels() - 1; i >= 0; i--) {
+    if (i < leds.numPixels() - 1)
+      leds.setPixelColor(i + 1, 0);
+    leds.setPixelColor(i, leds.Color(R_IDLE, G_IDLE, B_IDLE));
+    leds.show();
     delay(SPIN_SPEED);
   }
-  innerRing.setPixelColor(0, 0);
-  innerRing.show();
+  leds.setPixelColor(0, 0);
+  leds.show();
   delay(SPIN_SPEED);
 }
 
@@ -119,9 +119,9 @@ bool pollCardOnce() {
     fireRfCode(treeOn ? RF_CODE_ON : RF_CODE_OFF);
 
     if (treeOn) {
-      for (int i = 0; i < outerRing.numPixels(); i++)
-        outerRing.setPixelColor(i, outerRing.Color(R_IDLE, G_IDLE, B_IDLE));
-      outerRing.show();
+      for (int i = 0; i < leds.numPixels(); i++)
+        leds.setPixelColor(i, leds.Color(R_IDLE, G_IDLE, B_IDLE));
+      leds.show();
     } else {
       ledsOff();
     }
@@ -151,8 +151,7 @@ void setup() {
 
   rfSwitch.enableTransmit(RF_PIN);
 
-  outerRing.begin();
-  innerRing.begin();
+  leds.begin();
   ledsOff();
 
   Serial.println(F("Ready -- polling continuously, no sleep/wake."));
