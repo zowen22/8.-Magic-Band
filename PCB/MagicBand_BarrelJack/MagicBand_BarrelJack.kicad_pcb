@@ -287,7 +287,7 @@
 		(descr "Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator")
 		(tags "capacitor")
 		(property "Reference" "C4"
-			(at 0 -1.43 0)
+			(at 0 1.43 0)
 			(layer "F.SilkS")
 			(uuid "84ca3bf2-6acb-406e-ae58-d7cb6f74ede8")
 			(effects
@@ -1168,7 +1168,7 @@
 		(descr "Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator")
 		(tags "resistor")
 		(property "Reference" "R1"
-			(at 0 -1.43 0)
+			(at 2.2 0 0)
 			(layer "F.SilkS")
 			(uuid "3f061b51-63bc-4765-b834-d3441855a971")
 			(effects
@@ -6334,7 +6334,7 @@
 	(footprint "MountingHole:MountingHole_4.2mm"
 		(layer "F.Cu")
 		(uuid "0c8c6fcf-9e27-4c7f-8bbd-86d5f8b53862")
-		(at 37 20)
+		(at 37 27)
 		(descr "Mounting Hole 4.2mm, no annular ring -- heat-stake, non-plated")
 		(tags "mounting hole")
 		(property "Reference" "MH3"
