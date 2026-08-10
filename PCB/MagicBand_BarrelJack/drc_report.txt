@@ -1,12 +1,8 @@
 ** Drc report for MagicBand_BarrelJack.kicad_pcb **
-** Created on 2026-08-09T21:41:46 **
+** Created on 2026-08-09T23:48:06 **
 ** Report includes: Errors, Warnings **
 
-** Found 8 DRC violations **
-[starved_thermal]: Thermal relief connection to zone incomplete (layer B.Cu; zone min spoke count 2; actual 1)
-    Local override; error
-    @(0.5000 mm, 0.5000 mm): Zone [GND] on B.Cu, priority 0
-    @(4.0250 mm, 23.8250 mm): PTH pad 6 [GND] of J2
+** Found 6 DRC violations **
 [starved_thermal]: Thermal relief connection to zone incomplete (layer B.Cu; 1 spokes connected to isolated island)
     Local override; error
     @(0.5000 mm, 0.5000 mm): Zone [GND] on B.Cu, priority 0
@@ -15,10 +11,6 @@
     Local override; error
     @(0.5000 mm, 0.5000 mm): Zone [GND] on B.Cu, priority 0
     @(16.3800 mm, 21.7600 mm): PTH pad 22 [GND] of U1
-[starved_thermal]: Thermal relief connection to zone incomplete (layer B.Cu; zone min spoke count 2; actual 1)
-    Local override; error
-    @(0.5000 mm, 0.5000 mm): Zone [GND] on B.Cu, priority 0
-    @(11.5400 mm, 9.0800 mm): PTH pad 6 [GND] of J9
 [silk_edge_clearance]: Silkscreen clipped by board edge
     Rule: board setup constraints silk; warning
     @(0.0000 mm, 0.0000 mm): Segment on Edge.Cuts
