@@ -5942,6 +5942,22 @@
 		(uuid "e51dc8b6-bd90-450a-a4ba-61243dcc7cd8")
 	)
 	(segment
+		(start 27.78 20.5)
+		(end 28 20.5)
+		(width 0.2)
+		(layer "B.Cu")
+		(net "GND")
+		(uuid "2266d044-ee83-4a7f-86fa-a72fc5e054f6")
+	)
+	(segment
+		(start 26.5 19.22)
+		(end 27.78 20.5)
+		(width 0.2)
+		(layer "B.Cu")
+		(net "GND")
+		(uuid "29a66869-5813-454f-af20-00b1059ab3fc")
+	)
+	(segment
 		(start 27.6017 11.6)
 		(end 32.8017 16.8)
 		(width 0.2)
