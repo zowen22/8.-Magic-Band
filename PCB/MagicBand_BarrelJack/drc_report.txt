@@ -1,16 +1,12 @@
 ** Drc report for MagicBand_BarrelJack.kicad_pcb **
-** Created on 2026-08-11T23:11:04 **
+** Created on 2026-08-11T23:17:07 **
 ** Report includes: Errors, Warnings **
 
-** Found 5 DRC violations **
+** Found 4 DRC violations **
 [starved_thermal]: Thermal relief connection to zone incomplete (layer B.Cu; 1 spokes connected to isolated island)
     Local override; error
     @(0.5000 mm, 0.5000 mm): Zone [GND] on B.Cu, priority 0
     @(26.5000 mm, 19.2200 mm): PTH pad 8 [GND] of U1
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; warning
-    @(0.0000 mm, 0.0000 mm): Segment on Edge.Cuts
-    @(3.5000 mm, -0.1000 mm): Reference field of MH1
 [lib_footprint_issues]: Footprint 'MountingHole_4.2mm' not found in library 'MountingHole'
     Local override; warning
     @(3.5000 mm, 36.5000 mm): Footprint MH2

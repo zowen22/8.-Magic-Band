@@ -1292,7 +1292,7 @@
 		(descr "Mounting Hole 4.2mm, no annular ring -- heat-stake, non-plated")
 		(tags "mounting hole")
 		(property "Reference" "MH1"
-			(at 0 -3.6 0)
+			(at 0 3 0)
 			(layer "F.SilkS")
 			(uuid "688dc311-b96d-43b4-a504-cebde7cac868")
 			(effects
