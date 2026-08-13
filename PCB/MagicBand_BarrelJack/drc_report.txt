@@ -1,8 +1,12 @@
 ** Drc report for MagicBand_BarrelJack.kicad_pcb **
-** Created on 2026-08-12T19:36:37 **
+** Created on 2026-08-12T20:34:06 **
 ** Report includes: Errors, Warnings **
 
-** Found 3 DRC violations **
+** Found 4 DRC violations **
+[starved_thermal]: Thermal relief connection to zone incomplete (layer B.Cu; 1 spokes connected to isolated island)
+    Local override; error
+    @(0.5000 mm, 0.5000 mm): Zone [GND] on B.Cu, priority 0
+    @(26.5000 mm, 18.7200 mm): PTH pad 8 [GND] of U1
 [lib_footprint_issues]: Footprint 'MountingHole_4.2mm' not found in library 'MountingHole'
     Local override; warning
     @(4.5000 mm, 34.5000 mm): Footprint MH2
