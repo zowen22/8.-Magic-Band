@@ -356,6 +356,222 @@
 						)
 						(embedded_fonts no)
 					)
+		(symbol "Connector_Generic:Conn_01x04"
+						(pin_names
+							(offset 1.016)
+							(hide yes)
+						)
+						(exclude_from_sim no)
+						(in_bom yes)
+						(on_board yes)
+						(in_pos_files yes)
+						(duplicate_pin_numbers_are_jumpers no)
+						(property "Reference" "J"
+							(at 0 5.08 0)
+							(show_name no)
+							(do_not_autoplace no)
+							(effects
+								(font
+									(size 1.27 1.27)
+								)
+							)
+						)
+						(property "Value" "Conn_01x04"
+							(at 0 -7.62 0)
+							(show_name no)
+							(do_not_autoplace no)
+							(effects
+								(font
+									(size 1.27 1.27)
+								)
+							)
+						)
+						(property "Footprint" ""
+							(at 0 0 0)
+							(show_name no)
+							(do_not_autoplace no)
+							(hide yes)
+							(effects
+								(font
+									(size 1.27 1.27)
+								)
+							)
+						)
+						(property "Datasheet" ""
+							(at 0 0 0)
+							(show_name no)
+							(do_not_autoplace no)
+							(hide yes)
+							(effects
+								(font
+									(size 1.27 1.27)
+								)
+							)
+						)
+						(property "Description" "Generic connector, single row, 01x04, script generated (kicad-library-utils/schlib/autogen/connector/)"
+							(at 0 0 0)
+							(show_name no)
+							(do_not_autoplace no)
+							(hide yes)
+							(effects
+								(font
+									(size 1.27 1.27)
+								)
+							)
+						)
+						(property "ki_keywords" "connector"
+							(at 0 0 0)
+							(show_name no)
+							(do_not_autoplace no)
+							(hide yes)
+							(effects
+								(font
+									(size 1.27 1.27)
+								)
+							)
+						)
+						(property "ki_fp_filters" "Connector*:*_1x??_*"
+							(at 0 0 0)
+							(show_name no)
+							(do_not_autoplace no)
+							(hide yes)
+							(effects
+								(font
+									(size 1.27 1.27)
+								)
+							)
+						)
+						(symbol "Conn_01x04_1_1"
+							(rectangle
+								(start -1.27 3.81)
+								(end 1.27 -6.35)
+								(stroke
+									(width 0.254)
+									(type default)
+								)
+								(fill
+									(type background)
+								)
+							)
+							(rectangle
+								(start -1.27 2.667)
+								(end 0 2.413)
+								(stroke
+									(width 0.1524)
+									(type default)
+								)
+								(fill
+									(type none)
+								)
+							)
+							(rectangle
+								(start -1.27 0.127)
+								(end 0 -0.127)
+								(stroke
+									(width 0.1524)
+									(type default)
+								)
+								(fill
+									(type none)
+								)
+							)
+							(rectangle
+								(start -1.27 -2.413)
+								(end 0 -2.667)
+								(stroke
+									(width 0.1524)
+									(type default)
+								)
+								(fill
+									(type none)
+								)
+							)
+							(rectangle
+								(start -1.27 -4.953)
+								(end 0 -5.207)
+								(stroke
+									(width 0.1524)
+									(type default)
+								)
+								(fill
+									(type none)
+								)
+							)
+							(pin passive line
+								(at -5.08 2.54 0)
+								(length 3.81)
+								(name "Pin_1"
+									(effects
+										(font
+											(size 1.27 1.27)
+										)
+									)
+								)
+								(number "1"
+									(effects
+										(font
+											(size 1.27 1.27)
+										)
+									)
+								)
+							)
+							(pin passive line
+								(at -5.08 0 0)
+								(length 3.81)
+								(name "Pin_2"
+									(effects
+										(font
+											(size 1.27 1.27)
+										)
+									)
+								)
+								(number "2"
+									(effects
+										(font
+											(size 1.27 1.27)
+										)
+									)
+								)
+							)
+							(pin passive line
+								(at -5.08 -2.54 0)
+								(length 3.81)
+								(name "Pin_3"
+									(effects
+										(font
+											(size 1.27 1.27)
+										)
+									)
+								)
+								(number "3"
+									(effects
+										(font
+											(size 1.27 1.27)
+										)
+									)
+								)
+							)
+							(pin passive line
+								(at -5.08 -5.08 0)
+								(length 3.81)
+								(name "Pin_4"
+									(effects
+										(font
+											(size 1.27 1.27)
+										)
+									)
+								)
+								(number "4"
+									(effects
+										(font
+											(size 1.27 1.27)
+										)
+									)
+								)
+							)
+						)
+						(embedded_fonts no)
+					)
 		(symbol "Connector_Generic:Conn_01x08"
 						(pin_names
 							(offset 1.016)
@@ -4170,7 +4386,7 @@
 		)
 	)
 	(symbol
-		(lib_id "Connector_Generic:Conn_01x03")
+		(lib_id "Connector_Generic:Conn_01x04")
 		(at 290 40 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -4186,7 +4402,7 @@
 			(at 290 36.5 0)
 			(effects (font (size 1.27 1.27)))
 		)
-		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical"
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical"
 			(at 290 40 0)
 			(effects (font (size 1.27 1.27)) (hide yes))
 		)
@@ -4197,6 +4413,7 @@
 		(pin "1" (uuid "8087432c-f4ec-49e0-a732-dfbcea463306"))
 		(pin "2" (uuid "9cea7a8f-3f97-4e65-965d-ff353d369b55"))
 		(pin "3" (uuid "3dda0f53-d9f6-4160-8439-8a59db42edf8"))
+		(pin "4" (uuid "e33ba07d-71ce-4e3b-8294-5a1ce0be7424"))
 		(instances
 			(project "MagicBand_BarrelJack"
 				(path "/bcfef247-dfd6-4ae3-b42f-2bc22ccfcf8a"
@@ -4206,6 +4423,7 @@
 			)
 		)
 	)
+	(no_connect (at 284.92 45.08) (uuid "5580f62f-57bc-4cb3-add6-b805b25fc2a2"))
 	(wire
 		(pts (xy 284.92 37.46) (xy 290.0 37.46))
 		(stroke (width 0) (type default))
