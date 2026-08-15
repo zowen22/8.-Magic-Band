@@ -5,6 +5,17 @@
    directly-measured ~696-702us) is still slightly off from whatever the
    outlet's own receiver actually needs.
 
+   RESULT (2026-08-15): it was. Steps 1-4 (560-665us) triggered the outlet
+   consistently; step 5 (700us, our previously "confirmed" value) did not.
+   613us (midpoint of the working range) confirmed working directly.
+   700us decoded fine on our own bench RX the whole session because
+   rc-switch's default 60% receive tolerance is far more forgiving than
+   the outlet's actual receiver chip. PULSE_LEN=613 is now the value used
+   in RF_TXRX_Loopback.ino, RF_TX_Test.ino, MagicBand_Wireless.ino, and
+   MagicBand_BarrelJack.ino. This sketch is kept as-is (still sweeping
+   around 700) for historical/reproducibility reasons, not because 700 is
+   still believed correct.
+
    Sweeps PULSE_LEN from -20% to +20% of BASE_PULSE_LEN in 5% steps (9
    values total), sending REPEAT_COUNT repeats of CODE_ON at each one,
    with a pause in between so you can watch the outlet before the next
@@ -18,9 +29,15 @@
      EN      → leave disconnected
 
    ── Usage ────────────────────────────────────────────────────────────────
-   Type 's' + Enter to start the sweep. It runs all 9 values once, then
-   stops (type 's' again to re-run). Type 'o'/'f' + Enter at any time for
-   a single manual ON/OFF at BASE_PULSE_LEN, same as RF_TXRX_Loopback.
+   Type '1' through '9' + Enter to fire ONE specific step on demand (see
+   the table below) so you can test them individually and report back
+   which one(s) work, instead of watching a timed auto-sweep. 's' + Enter
+   still runs all 9 automatically if you want that instead. 'o'/'f' +
+   Enter for a manual single ON/OFF at BASE_PULSE_LEN.
+
+     1 = -20% (560us)   4 = -5%  (665us)   7 = +10% (770us)
+     2 = -15% (595us)   5 =  0%  (700us)   8 = +15% (805us)
+     3 = -10% (630us)   6 = +5%  (735us)   9 = +20% (840us)
 */
 
 #include <RCSwitch.h>
@@ -47,28 +64,32 @@ void sendAt(unsigned int pulseLen, unsigned long code) {
   for (uint8_t i = 0; i < REPEAT_COUNT; i++) {
     rfSwitch.send(code, BITS);
   }
+  rfSwitch.setPulseLength(BASE_PULSE_LEN); // restore baseline afterward
+}
+
+void runStep(uint8_t i) {
+  unsigned int pulseLen = (unsigned int)((long)BASE_PULSE_LEN * (100 + SWEEP_PERCENTS[i]) / 100);
+
+  Serial.print(F("["));
+  Serial.print(i + 1);
+  Serial.print(F("/"));
+  Serial.print(SWEEP_COUNT);
+  Serial.print(F("] pulse length "));
+  Serial.print(pulseLen);
+  Serial.print(F("us ("));
+  if (SWEEP_PERCENTS[i] >= 0) Serial.print(F("+"));
+  Serial.print(SWEEP_PERCENTS[i]);
+  Serial.println(F("%) — sending ON, watch the outlet"));
+
+  sendAt(pulseLen, CODE_ON);
 }
 
 void runSweep() {
   Serial.println(F("Sweep starting."));
   for (uint8_t i = 0; i < SWEEP_COUNT; i++) {
-    unsigned int pulseLen = (unsigned int)((long)BASE_PULSE_LEN * (100 + SWEEP_PERCENTS[i]) / 100);
-
-    Serial.print(F("["));
-    Serial.print(i + 1);
-    Serial.print(F("/"));
-    Serial.print(SWEEP_COUNT);
-    Serial.print(F("] pulse length "));
-    Serial.print(pulseLen);
-    Serial.print(F("us ("));
-    if (SWEEP_PERCENTS[i] >= 0) Serial.print(F("+"));
-    Serial.print(SWEEP_PERCENTS[i]);
-    Serial.println(F("%) — sending ON, watch the outlet"));
-
-    sendAt(pulseLen, CODE_ON);
+    runStep(i);
     delay(STEP_DELAY_MS);
   }
-  rfSwitch.setPulseLength(BASE_PULSE_LEN); // restore baseline for manual o/f afterward
   Serial.println(F("Sweep complete. If nothing responded, pulse length alone likely isn't the fix."));
 }
 
@@ -83,12 +104,13 @@ void setup() {
   rfSwitch.setRepeatTransmit(1); // send repeats as separate calls, no forced gap
 
   Serial.println(F("RF Pulse Sweep ready."));
-  Serial.println(F("Type 's' + Enter to run the sweep, or 'o'/'f' + Enter for a manual single test at baseline."));
+  Serial.println(F("Type '1'-'9' for one step, 's' for the full auto-sweep, or 'o'/'f' for a manual test at baseline."));
 }
 
 void loop() {
   if (Serial.available()) {
     char c = Serial.read();
+    if (c >= '1' && c <= '9') runStep(c - '1');
     if (c == 's') runSweep();
     if (c == 'o') sendAt(BASE_PULSE_LEN, CODE_ON);
     if (c == 'f') sendAt(BASE_PULSE_LEN, CODE_OFF);

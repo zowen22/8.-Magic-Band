@@ -82,7 +82,9 @@ const unsigned long RF_CODE_ON   = 0x885A8F00;
 const unsigned long RF_CODE_OFF  = 0x845A8F00;
 const unsigned int  RF_BITS      = 32;
 const unsigned int  RF_PROTOCOL  = 2;
-const unsigned int  RF_PULSE_LEN = 700;  // measured ~695-704us; library default for protocol 2 is 650us
+const unsigned int  RF_PULSE_LEN = 613;  // confirmed against the real outlet 2026-08-15 (RF_PulseSweep bench tool) —
+                                          // 700us decoded fine on our own bench RX but did NOT trigger the outlet;
+                                          // the outlet's receiver needed a notably shorter pulse (560-665us worked)
 const uint8_t        RF_REPEAT   = 5;  // 433MHz is fire-and-forget, no ACK — resend
 
 // ── DFPlayer Mini (optional) ─────────────────────────────────────────────

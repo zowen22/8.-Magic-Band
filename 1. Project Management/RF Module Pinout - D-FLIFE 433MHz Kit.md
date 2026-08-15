@@ -58,3 +58,28 @@ The wireless-variant power architecture doesn't currently account for a device t
 - RX is bench-only tooling (Sniffer step) — 5V requirement is a non-issue there since the Sniffer setup runs on a full Uno/Nano at 5V anyway
 
 Not yet folded into `BOM - Wireless Ornament Variant.md` or the firmware's pin-map comment — flagging here first since this is a capture, not a confirmed BOM change.
+
+-----
+
+## Pulse Length — Actual Working Value (2026-08-15)
+
+`RF_Sniffer` captures of the real remote consistently measured pulse length as
+~695-704us, so `700` was used everywhere as "the correct value" — and it did
+decode cleanly on our own bench RX module the whole time. It still didn't
+trigger the actual paired outlet, even at point-blank range, across an entire
+bench-debugging session that ruled out code content, repeat structure, and
+modulation type.
+
+Root cause: `rc-switch`'s default receive tolerance (60%) is far more
+forgiving than the outlet's actual receiver chip. A dedicated bench sweep
+(`RF_PulseSweep.ino`, testing -20% to +20% of 700us against the real outlet
+directly, not our own RX) found the outlet only responds in the **560-665us**
+range — 700us is entirely outside it. **613us** (roughly the midpoint)
+confirmed working reliably and is now the value used in every sketch that
+transmits: `RF_TXRX_Loopback.ino`, `RF_TX_Test.ino`, `MagicBand_Wireless.ino`,
+`MagicBand_BarrelJack.ino`.
+
+Takeaway for future RF work on this or similar receivers: **a value that
+decodes cleanly on our own bench RX does not confirm it'll work against the
+actual target device** — the two are different hardware with different
+tolerances, and only a direct sweep against the real target settles it.

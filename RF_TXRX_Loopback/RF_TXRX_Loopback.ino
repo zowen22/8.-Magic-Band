@@ -59,7 +59,9 @@ unsigned long CODE_ON  = 0x885A8F00; // 2287636224
 unsigned long CODE_OFF = 0x845A8F00; // 2220527360
 const unsigned int BITS      = 32;
 const unsigned int PROTOCOL  = 2;
-const unsigned int PULSE_LEN = 690;
+const unsigned int PULSE_LEN = 613; // confirmed against the real outlet via RF_PulseSweep 2026-08-15 — the outlet's receiver
+                                     // needed a notably shorter pulse (560-665us worked, 700us didn't) than our own bench RX's
+                                     // decode of the remote suggested (matched ~697-699us). This is the fix.
 const uint8_t REPEAT_COUNT   = 8;
 
 const uint8_t MAX_EVENTS = 10;

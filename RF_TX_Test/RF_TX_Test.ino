@@ -29,7 +29,9 @@ unsigned long CODE_ON  = 0x885A8F00; // 2287636224
 unsigned long CODE_OFF = 0x845A8F00; // 2220527360
 const unsigned int BITS      = 32;
 const unsigned int PROTOCOL  = 2;
-const unsigned int PULSE_LEN = 700;  // measured ~695-704us; protocol 2 library default is 650us
+const unsigned int PULSE_LEN = 613;  // confirmed against the real outlet 2026-08-15 (RF_PulseSweep bench tool) — 700us
+                                      // decoded fine on our own bench RX but did NOT trigger the outlet; the outlet's
+                                      // receiver needed a notably shorter pulse (560-665us range worked). This is the fix.
 const uint8_t REPEAT_COUNT   = 5;  // no ACK on 433MHz — resend a few times
 
 void sendCode(unsigned long code, const __FlashStringHelper *label) {
