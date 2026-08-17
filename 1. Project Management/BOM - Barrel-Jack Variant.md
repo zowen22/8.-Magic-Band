@@ -19,26 +19,35 @@ The BOM below covers the **custom PCB variant**, since that's the one with an ac
 
 ## Bill of Materials — Custom PCB (baseline, no audio)
 
-| Component | Part | Price | Notes |
-|---|---|---|---|
-| Microcontroller | **ATmega328P-PU**, DIP-28, bare chip | ~$2.50–4 | Replaces Pro Mini/Nano from earlier variants — no onboard USB/regulator, hand-solderable/socketable DIP package chosen deliberately (no reflow needed) |
-| Crystal | 16MHz, HC-49 or similar | ~$0.50–1 | **Y1.** Load-cap value (C1/C2, currently 22pF placeholder) needs confirming against the actual part's datasheet once sourced |
-| Load caps | 22pF ×2 (C1, C2) | ~$0.05–0.10 ea (bulk) | Crystal load caps — see above, value is generic pending real crystal spec |
-| Decoupling caps | 100nF ×3 (C3, C4, C_AREF), 1µF (C5), 10µF (C6), 1.0µF (C7) | ~$0.05–0.15 ea (bulk) | Standard MCU/regulator decoupling. C5 was flagged and fixed to meet MCP1700's 1.0µF datasheet minimum during PDR review |
-| Reverse-polarity protection | Q1 — AO3401A P-MOSFET (SOT-23) + R1, R2 (10k) | ~$0.10–0.30 (Q1) + negligible (resistors) | Ideal-diode protection ahead of the regulator/MCU — barrel jack is bare flying leads with no mechanical keying, so reversed/wrong-voltage adapters are a real risk. Chosen over a series diode to avoid eating into the 16MHz ATmega's voltage headroom |
-| 3.3V Regulator | MCP1700-3302 LDO (SOT-23) | ~$0.50–1/unit (10–20 packs) | **U2.** Steps 5V down to 3.3V for MFRC522 + RF TX module. Same part/rationale as the wireless-variant BOM |
-| RFID Reader | MFRC522 module | ~$1.25–5 (bulk) / up to $10 (kit) | **J2**, stacking female socket (`PinSocket_1x08`) — module plugs in shield-style, then hand-soldered for a permanent joint (board is sealed in the ornament) |
-| RF Transmitter | D-FLIFE 433MHz ASK TX module | ~$1–2/unit | **J3.** Footprint is still a placeholder — no vendor footprint exists anywhere; needs hand-measuring with calipers once physically in hand, before this board can be sent to fab |
-| NeoPixels | LED strip, count TBD (strip on order) | TBD | **J6.** Single outer strip only — inner ring dropped from the design 2026-08-06 |
-| ISP Header | 6-pin AVR ISP, 2×3 | ~$0.50–1 | **J9.** Shares SPI bus with J2 (MFRC522) — unplug the MFRC522 module before programming via ISP |
-| Power input | 5.5mm/2.1mm barrel jack, bare flying leads | ~$1–2 | **J8.** Hand-soldered directly to THT pads, not a board-mounted connector (a real KiCad `Barrel_Jack` symbol was tried and rejected — its pin geometry produced a genuine +5V/GND short) |
-| PCB fab | 40mm × 40mm, 2-layer | **Not yet priced** | Board outline hit its 40×40mm target with zero courtyard overlaps. Get a real JLCPCB quote once Gerbers are finalized (blocked on the RF TX footprint above) |
-| RF Outlet | Etekcity or similar 433MHz outlet kit | ~$25–30 | Pre-paired before shipping; not part of the board itself |
-| Power supply | 5V 3A wall adapter, barrel jack output | ~$8–12 | Buyer-supplied or included; standard commodity, well above this board's actual draw |
-| Programmer (one-time tooling) | USBasp or spare Nano-as-ISP | ~$3–5 | Not per-unit — bench tooling only, used to flash via the ISP header |
+Organized as a two-level BOM: **Level 1** rows are functional subassemblies (bold, with a subtotal); **Level 2** rows (↳) are the individual parts within that subassembly, matching the reference designators in the schematic.
 
-**Per-unit baseline total (excl. RF outlet, wall adapter, PCB fab, one-time tooling): ~$8–15**
-**Board-level components (chip + passives + regulator + MOSFET + ISP header): ~$5–8 of that**
+| Level | Component | Part | Price | Notes |
+|---|---|---|---|---|
+| **1** | **Core MCU Circuit** *(on-board)* | — | **~$4.00–7.40** | ATmega328P core: chip, clock, decoupling, reverse-polarity protection, regulator |
+| 2 | ↳ Microcontroller | ATmega328P-PU, DIP-28, bare chip | ~$2.50–4 | Replaces Pro Mini/Nano from earlier variants — no onboard USB/regulator, hand-solderable/socketable DIP package chosen deliberately (no reflow needed) |
+| 2 | ↳ Crystal | 16MHz, HC-49 or similar | ~$0.50–1 | **Y1.** Load-cap value (C1/C2, currently 22pF placeholder) needs confirming against the actual part's datasheet once sourced |
+| 2 | ↳ Load caps | 22pF ×2 (C1, C2) | ~$0.05–0.10 ea (bulk) | Crystal load caps — see above, value is generic pending real crystal spec |
+| 2 | ↳ Decoupling caps | 100nF ×3 (C3, C4, C_AREF), 1µF (C5), 10µF (C6), 1.0µF (C7) | ~$0.05–0.15 ea (bulk) | Standard MCU/regulator decoupling. C5 was flagged and fixed to meet MCP1700's 1.0µF datasheet minimum during PDR review |
+| 2 | ↳ Reverse-polarity protection | Q1 — AO3401A P-MOSFET (SOT-23) + R1, R2 (10k) | ~$0.10–0.30 (Q1) + negligible (resistors) | Ideal-diode protection ahead of the regulator/MCU — barrel jack is bare flying leads with no mechanical keying, so reversed/wrong-voltage adapters are a real risk. Chosen over a series diode to avoid eating into the 16MHz ATmega's voltage headroom |
+| 2 | ↳ 3.3V Regulator | MCP1700-3302 LDO (SOT-23) | ~$0.50–1/unit (10–20 packs) | **U2.** Steps 5V down to 3.3V for MFRC522 + RF TX module. Same part/rationale as the wireless-variant BOM |
+| **1** | **RFID Subsystem** | — | **~$1.25–10** | |
+| 2 | ↳ RFID Reader | MFRC522 module | ~$1.25–5 (bulk) / up to $10 (kit) | **J2**, stacking female socket (`PinSocket_1x08`) — module plugs in shield-style, then hand-soldered for a permanent joint (board is sealed in the ornament) |
+| **1** | **RF Control Subsystem** | — | **~$1–2 board-side** (+ ~$25–30 outlet, off-board) | |
+| 2 | ↳ RF Transmitter | D-FLIFE 433MHz ASK TX module | ~$1–2/unit | **J3.** Footprint is still a placeholder — no vendor footprint exists anywhere; needs hand-measuring with calipers once physically in hand, before this board can be sent to fab |
+| 2 | ↳ RF Outlet | Etekcity or similar 433MHz outlet kit | ~$25–30 | Off-board accessory, pre-paired before shipping; not part of the board itself, not a per-unit board cost |
+| **1** | **Lighting** | — | **TBD** | |
+| 2 | ↳ NeoPixels | LED strip, count TBD (strip on order) | TBD | **J6.** Single outer strip only — inner ring dropped from the design 2026-08-06 |
+| **1** | **Programming Interface** | — | **~$0.50–1 board-side** (+ ~$3–5 one-time) | |
+| 2 | ↳ ISP Header | 6-pin AVR ISP, 2×3 | ~$0.50–1 | **J9.** Shares SPI bus with J2 (MFRC522) — unplug the MFRC522 module before programming via ISP |
+| 2 | ↳ Programmer *(one-time tooling)* | USBasp or spare Nano-as-ISP | ~$3–5 | Not per-unit — bench tooling only, used to flash via the ISP header |
+| **1** | **Power Input & Supply** | — | **~$1–2 board-side** (+ ~$8–12 adapter, off-board) | |
+| 2 | ↳ Power input | 5.5mm/2.1mm barrel jack, bare flying leads | ~$1–2 | **J8.** Hand-soldered directly to THT pads, not a board-mounted connector (a real KiCad `Barrel_Jack` symbol was tried and rejected — its pin geometry produced a genuine +5V/GND short) |
+| 2 | ↳ Power supply | 5V 3A wall adapter, barrel jack output | ~$8–12 | Buyer-supplied or included; standard commodity, well above this board's actual draw |
+| **1** | **Fabrication** | — | **Not yet priced** | |
+| 2 | ↳ PCB fab | 40mm × 40mm, 2-layer | **Not yet priced** | Board outline hit its 40×40mm target with zero courtyard overlaps. Get a real JLCPCB quote once Gerbers are finalized (blocked on the RF TX footprint above) |
+
+**Per-unit board-side total (Level 1 subtotals, excl. RF outlet, wall adapter, PCB fab, one-time programmer): ~$7.75–17.40**
+**Core MCU Circuit alone: ~$4.00–7.40 of that**
 
 ### Optional add-on: Audio (not on this PCB, wired off-board — same as Nano build)
 
