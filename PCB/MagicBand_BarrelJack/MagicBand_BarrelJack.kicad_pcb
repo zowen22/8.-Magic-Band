@@ -1540,12 +1540,12 @@
 			)
 		)
 	)
-	(footprint "PinHeader_1x03_P2.54mm_Vertical"
+	(footprint "PinHeader_1x04_P2.54mm_Vertical"
 		(layer "F.Cu")
 		(uuid "7aef8606-30ab-4d67-b04b-194d1e28ea1d")
 		(at 36 3)
-		(descr "Through hole straight pin header, 1x03, 2.54mm pitch, single row")
-		(tags "Through hole pin header THT 1x03 2.54mm single row")
+		(descr "Through hole straight pin header, 1x04, 2.54mm pitch, single row")
+		(tags "Through hole pin header THT 1x04 2.54mm single row")
 		(property "Reference" "J3"
 			(at 0 -2.33 0)
 			(layer "F.SilkS")
@@ -1557,8 +1557,8 @@
 				)
 			)
 		)
-		(property "Value" "PinHeader_1x03_P2.54mm_Vertical"
-			(at 0 7.41 0)
+		(property "Value" "PinHeader_1x04_P2.54mm_Vertical"
+			(at 0 9.95 0)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "eb158267-b1e7-481b-9b7b-77ff1d6e1d00")
@@ -1615,7 +1615,7 @@
 		)
 		(fp_line
 			(start -1.33 1.27)
-			(end -1.33 6.41)
+			(end -1.33 8.95)
 			(stroke
 				(width 0.12)
 				(type solid)
@@ -1634,8 +1634,8 @@
 			(uuid "f8355821-a780-42ab-8750-f3a9c9c80ac3")
 		)
 		(fp_line
-			(start -1.33 6.41)
-			(end 1.33 6.41)
+			(start -1.33 8.95)
+			(end 1.33 8.95)
 			(stroke
 				(width 0.12)
 				(type solid)
@@ -1645,7 +1645,7 @@
 		)
 		(fp_line
 			(start 1.33 1.27)
-			(end 1.33 6.41)
+			(end 1.33 8.95)
 			(stroke
 				(width 0.12)
 				(type solid)
@@ -1655,7 +1655,7 @@
 		)
 		(fp_line
 			(start -1.8 -1.8)
-			(end -1.8 6.85)
+			(end -1.8 9.39)
 			(stroke
 				(width 0.05)
 				(type solid)
@@ -1664,8 +1664,8 @@
 			(uuid "1c55b51c-8c0d-4d6b-8cfd-9c5928fdc9b2")
 		)
 		(fp_line
-			(start -1.8 6.85)
-			(end 1.8 6.85)
+			(start -1.8 9.39)
+			(end 1.8 9.39)
 			(stroke
 				(width 0.05)
 				(type solid)
@@ -1684,7 +1684,7 @@
 			(uuid "bd9506c0-6c3e-4e6c-93ef-f35dfd883e6b")
 		)
 		(fp_line
-			(start 1.8 6.85)
+			(start 1.8 9.39)
 			(end 1.8 -1.8)
 			(stroke
 				(width 0.05)
@@ -1704,7 +1704,7 @@
 			(uuid "efd4eb54-896d-46e6-b56d-e8c5161a5e20")
 		)
 		(fp_line
-			(start -1.27 6.35)
+			(start -1.27 8.89)
 			(end -1.27 -0.635)
 			(stroke
 				(width 0.1)
@@ -1725,7 +1725,7 @@
 		)
 		(fp_line
 			(start 1.27 -1.27)
-			(end 1.27 6.35)
+			(end 1.27 8.89)
 			(stroke
 				(width 0.1)
 				(type solid)
@@ -1734,8 +1734,8 @@
 			(uuid "32f9e8bf-a372-4068-bdc3-3564631045aa")
 		)
 		(fp_line
-			(start 1.27 6.35)
-			(end -1.27 6.35)
+			(start 1.27 8.89)
+			(end -1.27 8.89)
 			(stroke
 				(width 0.1)
 				(type solid)
@@ -1744,7 +1744,7 @@
 			(uuid "f90dc5b4-5409-41c3-88c6-665e5d03c7f3")
 		)
 		(fp_text user "${REFERENCE}"
-			(at 0 2.54 90)
+			(at 0 3.81 90)
 			(layer "F.Fab")
 			(uuid "140767b7-4f10-4e39-9822-abe90ef13e1e")
 			(effects
@@ -1781,8 +1781,17 @@
 			(net "GND")
 			(uuid "5c91aec7-9bd3-4beb-b79c-2254c7b7c4c7")
 		)
+		(pad "4" thru_hole oval
+			(at 0 7.62)
+			(size 1.7 1.7)
+			(drill 1)
+			(layers "*.Cu" "*.Mask")
+			(remove_unused_layers no)
+			(net "+3V3")
+			(uuid "d1c7b6de-3a4e-4b3d-9e8a-6a2b1c9f5e70")
+		)
 		(embedded_fonts no)
-		(model "${KICAD10_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_1x03_P2.54mm_Vertical.step"
+		(model "${KICAD10_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_1x04_P2.54mm_Vertical.step"
 			(offset
 				(xyz 0 0 0)
 			)
