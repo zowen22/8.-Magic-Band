@@ -6231,7 +6231,7 @@
 	(segment
 		(start 8.325 33.6733)
 		(end 8.325 32.45)
-		(width 0.2)
+		(width 0.5)
 		(layer "F.Cu")
 		(net "Net-(J8-Pin_1)")
 		(uuid "246f6e43-18bf-475e-854e-504090582cfc")
@@ -6239,7 +6239,7 @@
 	(segment
 		(start 9.5 34.8483)
 		(end 8.325 33.6733)
-		(width 0.2)
+		(width 0.5)
 		(layer "F.Cu")
 		(net "Net-(J8-Pin_1)")
 		(uuid "3acbb82b-38c8-4407-86b1-0753a77d80be")
@@ -6247,7 +6247,7 @@
 	(segment
 		(start 9.5 36)
 		(end 9.5 34.8483)
-		(width 0.2)
+		(width 0.5)
 		(layer "F.Cu")
 		(net "Net-(J8-Pin_1)")
 		(uuid "d884faf3-152e-45e2-9383-875923162426")
