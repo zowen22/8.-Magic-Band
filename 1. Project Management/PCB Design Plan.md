@@ -10,7 +10,7 @@ Claude drives KiCad directly (writing/validating actual project files via `kicad
 
 **Status: Schematic complete, ERC-clean, survived two independent adversarial design reviews. Layout (placement + routing + DRC) is next.**
 
-Location: `PCB/MagicBand_BarrelJack/MagicBand_BarrelJack.kicad_sch` + `MagicBand_BarrelJack/MagicBand_BarrelJack.ino`.
+Location: `PCB/MagicBand_BarrelJack/MagicBand_BarrelJack.kicad_sch` + `Arduino/MagicBand_BarrelJack/MagicBand_BarrelJack.ino`.
 
 ### 1.1 What it is
 Wall-powered via a barrel jack (not battery — see §3 for why the battery variant was abandoned). Derived from the paused fully-custom battery board, carrying forward its proven sub-circuits and dropping battery-only complexity.
