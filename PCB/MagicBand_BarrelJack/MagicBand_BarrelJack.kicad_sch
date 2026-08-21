@@ -3767,7 +3767,7 @@
 			(at 121.43 63.760000000000005 0)
 			(effects (font (size 1.27 1.27)))
 		)
-		(property "Value" "22pF"
+		(property "Value" "27pF"
 			(at 121.43 66.26 0)
 			(effects (font (size 1.27 1.27)))
 		)
@@ -3853,7 +3853,7 @@
 			(at 149.05 63.760000000000005 0)
 			(effects (font (size 1.27 1.27)))
 		)
-		(property "Value" "22pF"
+		(property "Value" "27pF"
 			(at 149.05 66.26 0)
 			(effects (font (size 1.27 1.27)))
 		)
