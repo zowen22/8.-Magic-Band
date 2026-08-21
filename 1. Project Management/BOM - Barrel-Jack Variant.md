@@ -57,6 +57,7 @@ User's call (2026-08-21): use a PCBA/assembly service for everything that can be
 **Files generated 2026-08-21** (in `PCB/MagicBand_BarrelJack/`, committed to the repo alongside the board files — regenerate from the `.kicad_sch`/`.kicad_pcb` if the board changes rather than trusting a stale copy):
 - `MagicBand_BarrelJack_BOM.csv` — grouped by value+footprint, includes a DNP column (J8 flagged)
 - `MagicBand_BarrelJack_CPL.csv` — placement positions/rotations for every non-DNP part, ready to upload alongside the BOM to a quote tool
+- `MagicBand_BarrelJack_Gerbers.zip` — Gerber X2 (F/B Cu, Paste, Silkscreen, Mask, Edge.Cuts) + separate PTH/NPTH Excellon drill files, all at the zip root (not nested in a subfolder — a common upload gotcha). This is the bare-board fab order's file, uploaded first/separately from the BOM/CPL
 
 **Found and fixed while preparing these files** (not new since they existed before, just previously undetected):
 - **C_AREF renamed to C8** — this reference was never run through KiCad's normal annotation flow (non-numeric suffix), which the BOM exporter flagged as an annotation warning. Real risk if left alone: BOM (schematic-derived) and CPL (PCB-derived) reference strings have to match exactly for an assembly house's placement system to correlate them — an unusual designator isn't guaranteed to survive that round-trip cleanly. Fixed in both files, verified via ERC/DRC diff (129/7, exact baseline both times).
