@@ -26,7 +26,7 @@ Sourcing list for the current active board — wall-powered via barrel jack, no 
 | J9 | ISP header | 2x3 shrouded IDC box header, 2.54mm — generic, any standard part | Only needed while flashing firmware, not a permanent functional part. Low-stakes, any keyed 2x3 shroud works |
 | R1, R2 | Resistors | 10k, 0603 SMD | Generic value/package — an assorted 0603 resistor kit covers this plus spares |
 | C1, C2 | Load caps | 27pF, 0603 (C1) / 0805 (C2) | **Note the mismatched packages** (SS3 below) — buy one of each size, not a matched pair of the same package |
-| C3, C4, C_AREF | Decoupling | 100nF, 0603 SMD | Generic — assorted kit covers this |
+| C3, C4, C8 | Decoupling | 100nF, 0603 SMD | Generic — assorted kit covers this |
 | C5 | Bulk decoupling | 1uF, 0805 SMD | Generic |
 | C6 | Bulk decoupling | 10uF, 0603 SMD | Generic |
 | C7 | Decoupling | 1.0uF, 0603 SMD | Generic |
@@ -37,5 +37,27 @@ Sourcing list for the current active board — wall-powered via barrel jack, no 
 ## Notes
 
 - **C1/C2 and C6's package sizes are intentionally mismatched from what you might expect from a "matched pair" or "bigger = bulk cap" assumption** — this reflects what's actually routed on the PCB (verified 2026-08-21, see Session Log), not an error. C1=0603/C2=0805 for the crystal caps, C6=0603 for the 10uF bulk cap. Buy to this table, not to intuition.
-- **Generic passives** (R1/R2, C3/C4/C5/C7/C_AREF) are common enough values/packages that a general assorted 0603+0805 SMD resistor/capacitor kit is likely more practical than sourcing each individually — cross-check kit contents against the values above before assuming full coverage.
+- **Generic passives** (R1/R2, C3/C4/C5/C7/C8) are common enough values/packages that a general assorted 0603+0805 SMD resistor/capacitor kit is likely more practical than sourcing each individually — cross-check kit contents against the values above before assuming full coverage.
 - Prices intentionally omitted for most rows above — pull current pricing at order time rather than trust a number captured here that will drift.
+
+-----
+
+## Assembly Service (PCBA) — What Can Be Fab-Placed
+
+User's call (2026-08-21): use a PCBA/assembly service for everything that can be, minimize hand-assembly to what genuinely can't be fab-placed.
+
+**Fab-placeable (18 refs)**: R1, R2, C1-C8 (all passives), Q1, U2 (SMD ICs), Y1 (crystal, THT), U1 (MCU, THT), J2/J3/J6/J9 (all connectors/sockets/headers, THT). JLCPCB and similar services support mixed SMT+THT assembly in one order (SMD via reflow, THT via wave/selective soldering) — confirmed via their own docs, not assumed.
+
+**Cannot be fab-placed, stays hand-assembly regardless**:
+- **J8 (barrel jack)** — no real part to place. It's bare THT pads by design (see SS1.5 in `PCB Design Plan.md`), so this is the one connector with genuinely nothing for a fab to populate. Marked `DNP` (Do Not Populate) in the schematic and PCB 2026-08-21 specifically so an assembly order doesn't try to place a generic 2-pin header there — confirmed via BOM/CPL diff that it now excludes correctly.
+- **The modules themselves** (MFRC522 board, RF TX module, NeoPixel strip) — these plug into J2/J3/J6 *after* the board comes back from assembly. A fab can place the socket/header/connector, but has no way to source or place external modules it doesn't manufacture. This is true regardless of assembly vs. hand-solder.
+
+**U1 — socket vs. direct chip is a real open choice, not yet decided**: same THT footprint either way (no board difference), but a real tradeoff. Direct chip placement is more hands-off (nothing left for you to insert) but means a bad joint is a desolder job instead of a two-second socket swap — the whole reason DIP was chosen over TQFP in the first place. Check actual cost delta between the two at your fab's live BOM quote tool (not something reliably web-searchable — depends on their parts catalog/quantity pricing in real time).
+
+**Files generated 2026-08-21** (in `PCB/MagicBand_BarrelJack/`, committed to the repo alongside the board files — regenerate from the `.kicad_sch`/`.kicad_pcb` if the board changes rather than trusting a stale copy):
+- `MagicBand_BarrelJack_BOM.csv` — grouped by value+footprint, includes a DNP column (J8 flagged)
+- `MagicBand_BarrelJack_CPL.csv` — placement positions/rotations for every non-DNP part, ready to upload alongside the BOM to a quote tool
+
+**Found and fixed while preparing these files** (not new since they existed before, just previously undetected):
+- **C_AREF renamed to C8** — this reference was never run through KiCad's normal annotation flow (non-numeric suffix), which the BOM exporter flagged as an annotation warning. Real risk if left alone: BOM (schematic-derived) and CPL (PCB-derived) reference strings have to match exactly for an assembly house's placement system to correlate them — an unusual designator isn't guaranteed to survive that round-trip cleanly. Fixed in both files, verified via ERC/DRC diff (129/7, exact baseline both times).
+- One edit attempt broke the schematic's parenthesis balance (a dropped closing paren) — caught immediately via a balance check before trusting the result, fixed, re-verified. No bad state was ever exported or committed.

@@ -1,10 +1,10 @@
-ERC report (2026-08-21T10:16:19, Encoding UTF8)
+ERC report (2026-08-21T11:16:58, Encoding UTF8)
 Report includes: Errors, Warnings
 
 ***** Sheet /
 [endpoint_off_grid]: Symbol pin or wire end off connection grid
     ; warning
-    @(110.00 mm, 126.19 mm): Symbol C_AREF Pin 1 [Passive, Line]
+    @(110.00 mm, 126.19 mm): Symbol C8 Pin 1 [Passive, Line]
 [endpoint_off_grid]: Symbol pin or wire end off connection grid
     ; warning
     @(110.00 mm, 128.73 mm): Vertical Wire, length 2.54 mm
