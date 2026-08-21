@@ -56,9 +56,18 @@ User's call (2026-08-21): use a PCBA/assembly service for everything that can be
 
 **Files generated 2026-08-21** (in `PCB/MagicBand_BarrelJack/`, committed to the repo alongside the board files — regenerate from the `.kicad_sch`/`.kicad_pcb` if the board changes rather than trusting a stale copy):
 - `MagicBand_BarrelJack_BOM.csv` — grouped by value+footprint, includes a DNP column (J8 flagged)
-- `MagicBand_BarrelJack_CPL.csv` — placement positions/rotations for every non-DNP part, ready to upload alongside the BOM to a quote tool
+- `MagicBand_BarrelJack_CPL.csv` — placement positions/rotations for every non-DNP part, ready to upload alongside the BOM to a quote tool. **Format is JLCPCB-specific, not kicad-cli's raw output** — see note below, first upload attempt failed on this exact file
 - `MagicBand_BarrelJack_Gerbers.zip` — Gerber X2 (F/B Cu, Paste, Silkscreen, Mask, Edge.Cuts) + separate PTH/NPTH Excellon drill files, all at the zip root (not nested in a subfolder — a common upload gotcha). This is the bare-board fab order's file, uploaded first/separately from the BOM/CPL
 
 **Found and fixed while preparing these files** (not new since they existed before, just previously undetected):
 - **C_AREF renamed to C8** — this reference was never run through KiCad's normal annotation flow (non-numeric suffix), which the BOM exporter flagged as an annotation warning. Real risk if left alone: BOM (schematic-derived) and CPL (PCB-derived) reference strings have to match exactly for an assembly house's placement system to correlate them — an unusual designator isn't guaranteed to survive that round-trip cleanly. Fixed in both files, verified via ERC/DRC diff (129/7, exact baseline both times).
 - One edit attempt broke the schematic's parenthesis balance (a dropped closing paren) — caught immediately via a balance check before trusting the result, fixed, re-verified. No bad state was ever exported or committed.
+
+**CPL upload failure, fixed 2026-08-21**: `kicad-cli pcb export pos`'s raw CSV output (`Ref, Val, Package, PosX, PosY, Rot, Side`) is not JLCPCB's expected format and the first upload attempt failed. User supplied JLCPCB's own sample template (`JLCSMT_Sample_CPL1.xlsx`, downloaded from their site, not committed to this repo) to diagnose against. JLCPCB expects exactly **`Designator, Mid X, Mid Y, Layer, Rotation`**, with:
+- Coordinates as `mm`-suffixed strings (e.g. `14.0000mm`), not bare numbers
+- **Y coordinate negated** from kicad-cli's raw export — KiCad's position file uses a Y-down convention, JLCPCB's is Y-up. Confirmed correct (not just following a forum post) by checking the negated values all land inside the board's actual 0-40mm bounds, matching the sample template's all-positive values
+- `Layer` capitalized (`Top`/`Bottom`, not `top`/`bottom`)
+- `Rotation` normalized to 0-360 (kicad-cli emits e.g. `-90` for U2, converted to `270`)
+- Extra columns (`Val`, `Package`) dropped — not part of JLCPCB's expected format
+
+`MagicBand_BarrelJack_CPL.csv` now has the corrected format directly (kicad-cli's raw output was post-processed via a script, not committed separately). Cross-checked against the community-documented conversion (same renames, same Y-negation, same mm-suffix convention) rather than trusting the sample template alone.
