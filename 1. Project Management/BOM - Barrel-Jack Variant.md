@@ -46,16 +46,21 @@ Sourcing list for the current active board — wall-powered via barrel jack, no 
 
 User's call (2026-08-21): use a PCBA/assembly service for everything that can be, minimize hand-assembly to what genuinely can't be fab-placed.
 
-**Fab-placeable (18 refs)**: R1, R2, C1-C8 (all passives), Q1, U2 (SMD ICs), Y1 (crystal, THT), U1 (MCU, THT), J2/J3/J6/J9 (all connectors/sockets/headers, THT). JLCPCB and similar services support mixed SMT+THT assembly in one order (SMD via reflow, THT via wave/selective soldering) — confirmed via their own docs, not assumed.
+**Revised 2026-08-25**: while matching parts during the actual JLCPCB BOM upload, user decided J2 and J3 should be hand-soldered rather than fab-placed — both are mechanically-loaded connectors (modules get plugged/unplugged, cables tugged), and solder-joint reliability there matters more than assembly convenience. J6 (JST-PH, keyed housing) and J9 (shrouded IDC header, keyed) stay fab-placed — no similar mechanical-stress/reliability concern since their mating cables are pre-built and keyed, not friction-fit or hand-wired.
+
+**Fab-placeable (16 refs)**: R1, R2, C1-C8 (all passives), Q1, U2 (SMD ICs), Y1 (crystal, THT), U1 (MCU, THT), J6/J9 (connectors, THT — keyed/pre-built mating cables). JLCPCB and similar services support mixed SMT+THT assembly in one order (SMD via reflow, THT via wave/selective soldering) — confirmed via their own docs, not assumed.
 
 **Cannot be fab-placed, stays hand-assembly regardless**:
 - **J8 (barrel jack)** — no real part to place. It's bare THT pads by design (see SS1.5 in `PCB Design Plan.md`), so this is the one connector with genuinely nothing for a fab to populate. Marked `DNP` (Do Not Populate) in the schematic and PCB 2026-08-21 specifically so an assembly order doesn't try to place a generic 2-pin header there — confirmed via BOM/CPL diff that it now excludes correctly.
 - **The modules themselves** (MFRC522 board, RF TX module, NeoPixel strip) — these plug into J2/J3/J6 *after* the board comes back from assembly. A fab can place the socket/header/connector, but has no way to source or place external modules it doesn't manufacture. This is true regardless of assembly vs. hand-solder.
 
+**Hand-assembly by choice, not necessity (added 2026-08-25)**:
+- **J2 (MFRC522 socket)** and **J3 (RF TX header)** — marked `DNP` in the schematic and PCB. Both *could* be fab-placed (mixed THT assembly supports them fine), but user prioritized solder-joint stability on connectors that take repeated mechanical stress (module insertion/removal, wire tension) over the convenience of one-shot assembly. Verified via ERC/DRC re-run after the flag change (129/7, same baseline both times — DNP is a pure assembly-intent flag, zero copper/connectivity impact, consistent with the J8 precedent).
+
 **U1 — socket vs. direct chip is a real open choice, not yet decided**: same THT footprint either way (no board difference), but a real tradeoff. Direct chip placement is more hands-off (nothing left for you to insert) but means a bad joint is a desolder job instead of a two-second socket swap — the whole reason DIP was chosen over TQFP in the first place. Check actual cost delta between the two at your fab's live BOM quote tool (not something reliably web-searchable — depends on their parts catalog/quantity pricing in real time).
 
 **Files generated 2026-08-21** (in `PCB/MagicBand_BarrelJack/`, committed to the repo alongside the board files — regenerate from the `.kicad_sch`/`.kicad_pcb` if the board changes rather than trusting a stale copy):
-- `MagicBand_BarrelJack_BOM.csv` — grouped by value+footprint, includes a DNP column (J8 flagged)
+- `MagicBand_BarrelJack_BOM.csv` — grouped by value+footprint, includes a DNP column (J2, J3, J8 flagged as of 2026-08-25 — see revised assembly-service section above)
 - `MagicBand_BarrelJack_CPL.csv` — placement positions/rotations for every non-DNP part, ready to upload alongside the BOM to a quote tool. **Format is JLCPCB-specific, not kicad-cli's raw output** — see note below, first upload attempt failed on this exact file
 - `MagicBand_BarrelJack_Gerbers.zip` — Gerber X2 (F/B Cu, Paste, Silkscreen, Mask, Edge.Cuts) + separate PTH/NPTH Excellon drill files, all at the zip root (not nested in a subfolder — a common upload gotcha). This is the bare-board fab order's file, uploaded first/separately from the BOM/CPL
 
