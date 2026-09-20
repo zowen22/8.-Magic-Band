@@ -4209,7 +4209,7 @@
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
-		(dnp yes)
+		(dnp no)
 		(uuid "cefdde2b-d90d-4e5d-b439-d80c6120f81a")
 		(property "Reference" "J2"
 			(at 250 34 0)
