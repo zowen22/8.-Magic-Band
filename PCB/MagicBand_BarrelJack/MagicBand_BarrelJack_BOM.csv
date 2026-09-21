@@ -5,7 +5,7 @@
 "C5","1uF","Capacitor_SMD:C_0805_2012Metric","1",""
 "C6","10uF","Capacitor_SMD:C_0603_1608Metric","1",""
 "C7","1.0uF","Capacitor_SMD:C_0603_1608Metric","1",""
-"J2","MFRC522_Module","Connector_PinSocket_2.54mm:PinSocket_1x08_P2.54mm_Vertical","1",""
+"J2","MFRC522_Module","Connector_PinSocket_2.54mm:PinSocket_1x08_P2.54mm_Vertical","1","DNP"
 "J3","RF_TX_DFLIFE","Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical","1","DNP"
 "J6","NeoPixel_LED_Strip","Connector_JST:JST_PH_B3B-PH-K_1x03_P2.00mm_Vertical","1",""
 "J8","PWR_IN_BarrelJack_BareLeads","Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical","1","DNP"
