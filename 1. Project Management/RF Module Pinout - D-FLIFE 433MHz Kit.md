@@ -83,3 +83,15 @@ Takeaway for future RF work on this or similar receivers: **a value that
 decodes cleanly on our own bench RX does not confirm it'll work against the
 actual target device** — the two are different hardware with different
 tolerances, and only a direct sweep against the real target settles it.
+
+-----
+
+## Physical Pin Spacing — Naturally Keyed Against 180° Reversal (2026-10-02)
+
+Observed while hand-soldering a real TX module to `MagicBand_BarrelJack`'s J3: the module's
+own pre-soldered pins aren't evenly spaced — there's a slight offset — so it fits J3's 4
+through-holes correctly in the real orientation, but would *not* physically fit if rotated
+180°. This is a genuine mechanical keying feature of the module itself (not something this
+board's footprint does), worth knowing for future builds: if a TX module from this exact kit
+doesn't seem to fit, don't force it — try flipping it 180° before assuming something's wrong
+with the board or the module.
