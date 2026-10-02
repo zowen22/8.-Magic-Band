@@ -45,7 +45,7 @@
 #include <RCSwitch.h>
 
 // -- LED Strip Configuration ------------------------------------------------
-// TODO: update LED_COUNT once the ordered strip's actual pixel count is known.
+// Confirmed 2026-10-02: real strip connected to J6 is 16 pixels, not a placeholder.
 #define LED_COUNT  16
 
 const uint8_t PIN_LEDS = 5;
