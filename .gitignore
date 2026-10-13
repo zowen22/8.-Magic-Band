@@ -1,0 +1,21 @@
+# KiCad lock files (local-session only, never meaningful to commit)
+~*.lck
+
+# VS Code local-history extension
+.history/
+
+# arduino-cli build output
+.build-out/
+
+# Specctra autorouter working files -- regenerated per routing session,
+# explicitly treated as disposable in 4. Technical Reference.md
+*.dsn
+*.ses
+
+# Loose gerbers/ export folder -- the tracked deliverable is the zip
+# (MagicBand_BarrelJack_Gerbers.zip), not the extracted working folder
+PCB/**/gerbers/
+
+# One-off scratch/reference files from past debugging sessions, not project data
+PCB/MagicBand_BarrelJack/erc_j3_check.json
+PCB/MagicBand_BarrelJack/JLCSMT_Sample_CPL1*.xlsx

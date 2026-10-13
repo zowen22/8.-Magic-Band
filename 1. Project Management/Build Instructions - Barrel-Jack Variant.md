@@ -100,6 +100,21 @@ J6 is already fab-placed (JST B3B-PH-KL, keyed) — nothing to solder to the boa
 
 -----
 
+## Step 5a — Second LED strip (bodge wiring, not a designed connector)
+
+*(Added 2026-10-13 — second strip is a late addition on the already-fabricated rev 1 board, no header for it exists. Rev 2 should give this its own proper connector — see Work Packages WP4.3.)* Two separate points of soldering, not one:
+
+**Data line** — bodge a wire directly to U1's own DIP leg, not to any existing connector:
+- U1 is a 28-pin DIP. With the pin-1 notch/dot oriented up, pin 1 is the top-left pin; numbering runs down the left column, then back up the right.
+- Use **D2 (Arduino digital pin 2 = ATmega328P physical pin 4 = PD2)** — genuinely unused (confirmed via netlist: `unconnected-(U1-PD2-Pad4)`, no stale net name baggage, unlike D6). It's the 4th pin down the left column from the pin-1 notch, two pins past RESET.
+- Solder the strip's data wire to this leg directly. **Firmware for strip 2 is a separate pending task** — this pin carries no signal until that firmware change is written, so physically wiring it now won't do anything until then.
+
+**Power + ground** — tap at **J8 (the barrel jack's own leads/pads)**, not at J6 or by splicing onto strip 1's wire:
+- J8 pad 1 (+5V) / pad 2 (GND) sit upstream of the board's thin 0.2mm +5V trunk — the only deliberately-widened segment (0.5mm, J8→Q1) is exactly the segment J8's own pads sit on, so tapping here gives strip 2 its own path without adding load to the trunk strip 1 already uses.
+- **Trade-off, your call**: tapping at J8 is before Q1's reverse-polarity protection circuit, so strip 2's wiring isn't covered by that protection the way the rest of the board is (strip 1, MCU, RFID, RF TX all sit downstream of Q1). If that matters to you, the alternative is tapping Q1's output pad directly instead — same widened trace segment, protected, but Q1 is a small SOT-23 SMD part, not an easy bodge point for hand soldering. Defaulting to J8 here since it's the practical choice for a hand-wired bodge.
+
+-----
+
 ## Step 6 — Dry-fit check
 
 Before final assembly (or at least before you're fully committed), physically test-fit the soldered MFRC522 module against J9's location — confirm the module's body doesn't block access to J9 for any future ISP cable connection. This was flagged, not verified, in the 2026-09-21 PDR (neither footprint has courtyard geometry, so DRC can't catch it).
