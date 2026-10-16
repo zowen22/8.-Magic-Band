@@ -94,24 +94,28 @@ No header here either — J8 is bare THT pads by design. Solder the pre-wired ja
 
 -----
 
-## Step 5 — Connect J6 (NeoPixel strip)
+## Step 5 — Connect J6 (NeoPixel strip, outer ring)
 
 J6 is already fab-placed (JST B3B-PH-KL, keyed) — nothing to solder to the board here. Crimp or solder the JST-PH 3-pin pigtail onto the LED strip's own cut wire end, then plug it into J6.
 
+**Wire color convention — this one runs backwards of normal, confirmed intentional (2026-10-13):** the sourced pigtail kit's own internal wiring is yellow=data/**black=+5V**/**red=GND** — inverted from the standard red=power/black=ground convention (flagged 2026-10-02, WP4.1). Solder the outer ring strip's wires to **match the pigtail's actual colors, not the universal convention** — i.e. the strip's black wire goes where the pigtail carries +5V, red where it carries GND. Validated 2026-10-13 via a dedicated isolation test (`Arduino/MagicBand_BarrelJack_JstIntactTest/`): a correctly-wired full JST connection (data+power+ground all through the connector, matching the pigtail's real colors) ran clean through a rainbow cycle and solid-color holds including full white, with no issues. **Do not solder this strip in standard red=+/black=GND convention** — that mismatch against the pigtail's actual wiring is exactly what caused the second smoke incident (see Work Packages WP4.3, 2026-10-13).
+
 -----
 
-## Step 5a — Second LED strip (bodge wiring, not a designed connector)
+## Step 5a — Second LED strip (inner ring, bodge wiring, not a designed connector)
 
 *(Added 2026-10-13 — second strip is a late addition on the already-fabricated rev 1 board, no header for it exists. Rev 2 should give this its own proper connector — see Work Packages WP4.3.)* Two separate points of soldering, not one:
 
 **Data line** — bodge a wire directly to U1's own DIP leg, not to any existing connector:
 - U1 is a 28-pin DIP. With the pin-1 notch/dot oriented up, pin 1 is the top-left pin; numbering runs down the left column, then back up the right.
 - Use **D2 (Arduino digital pin 2 = ATmega328P physical pin 4 = PD2)** — genuinely unused (confirmed via netlist: `unconnected-(U1-PD2-Pad4)`, no stale net name baggage, unlike D6). It's the 4th pin down the left column from the pin-1 notch, two pins past RESET.
-- Solder the strip's data wire to this leg directly. **Firmware for strip 2 is a separate pending task** — this pin carries no signal until that firmware change is written, so physically wiring it now won't do anything until then.
+- Solder the strip's data wire to this leg directly.
 
-**Power + ground** — tap at **J8 (the barrel jack's own leads/pads)**, not at J6 or by splicing onto strip 1's wire:
-- J8 pad 1 (+5V) / pad 2 (GND) sit upstream of the board's thin 0.2mm +5V trunk — the only deliberately-widened segment (0.5mm, J8→Q1) is exactly the segment J8's own pads sit on, so tapping here gives strip 2 its own path without adding load to the trunk strip 1 already uses.
-- **Trade-off, your call**: tapping at J8 is before Q1's reverse-polarity protection circuit, so strip 2's wiring isn't covered by that protection the way the rest of the board is (strip 1, MCU, RFID, RF TX all sit downstream of Q1). If that matters to you, the alternative is tapping Q1's output pad directly instead — same widened trace segment, protected, but Q1 is a small SOT-23 SMD part, not an easy bodge point for hand soldering. Defaulting to J8 here since it's the practical choice for a hand-wired bodge.
+**Power + ground** — direct to the barrel jack, **standard wire-color convention** (red=+5V, black=GND — this strip is NOT going through the inverted-color pigtail, so use the normal convention here, unlike Step 5's outer ring):
+- Two ways to land it, your choice: solder directly to the jack's own leads, or use the ordered **KF128-2.54-2P screw terminal block** (2.54mm pitch, 8A/130V rated, 18-26AWG — see Work Packages WP4.3 for the sourced part) landed on J8's existing footprint for a clamp-in connection instead of a solder joint.
+- Either way, this bypasses the board's thin 0.2mm +5V trunk entirely (the confirmed smoke-incident bottleneck) — same reasoning as the outer ring's power/ground fix, see Work Packages WP4.3.
+- **Trade-off, same as before**: this path is upstream of Q1's reverse-polarity protection, so this strip's wiring isn't covered by it the way the rest of the board is.
+- **Wiring discipline, learned the hard way (second smoke incident, 2026-10-13)**: this strip uses standard colors, the outer ring's pigtail uses inverted colors (Step 5 above) — don't infer either one from the other. Multimeter-verify polarity on each strip independently before powering up.
 
 -----
 
