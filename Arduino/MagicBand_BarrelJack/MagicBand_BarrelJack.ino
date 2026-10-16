@@ -11,13 +11,13 @@
      VCC -> external 3.3V regulator output (MCP1700-3302)
      IRQ intentionally unconnected -- not used, PICC_IsNewCardPresent() is polled
 
-   NeoPixels:
-     LED strip -> D5
-     VCC wired directly to +5V, no gating -- strip is always powered
-     (Inner ring removed 2026-08-06 -- user is sourcing an LED strip for
-     the outer position only, no second ring. D6/inner-ring wiring no
-     longer used; see PCB Design Plan.md and Work Packages WP3.1 for the
-     matching schematic/PCB change still needed.)
+   NeoPixels (two strips as of 2026-10-13):
+     Outer ring -> D5  |  38px, denser/smaller LEDs than the original 16px strip
+     Inner ring -> D2  |  35px, NEW -- bodged directly to U1's DIP leg (no
+       designed connector exists on rev 1; see "Build Instructions - Barrel-Jack
+       Variant.md" Step 5a for the physical solder points). Rev 2 should give
+       this its own connector -- see Work Packages WP4.3.
+     Both strips' VCC wired directly to +5V, no gating -- always powered
 
    RF Transmitter (433MHz, D-FLIFE ASK TX):
      DATA -> D8  |  PWR IN -> external 3.3V regulator output (same rail as
@@ -37,20 +37,34 @@
    remote's top-row ON/OFF buttons -- verified against the physical outlet
    the tree lights are plugged into (2026-08-03). Confirmed repeatable
    across multiple presses each, not a rolling code.
+
+   -- Animation sequence, as of 2026-10-13 --
+   On card tap: outer ring only spins a single white point 3 laps, speeding
+   up exponentially over the sequence. Exactly as that spin ends (start of
+   the solid hold), the RF outlet toggle fires -- same alternating on/off
+   logic as always, just re-timed to this new sequence. Both strips then
+   hold solid green. THERMAL_TEST_MODE below controls how long that hold
+   lasts -- see its comment before flashing.
 */
 
 #include <SPI.h>
 #include <MFRC522.h>
 #include <Adafruit_NeoPixel.h>
 #include <RCSwitch.h>
+#include <math.h>
 
 // -- LED Strip Configuration ------------------------------------------------
-// Confirmed 2026-10-02: real strip connected to J6 is 16 pixels, not a placeholder.
-#define LED_COUNT  16
+// Outer ring: existing strip position, now denser/smaller LEDs -- 38px (was 16).
+// Inner ring: new strip, bodged to U1's D2 leg -- 35px. See header comment above.
+#define LED_COUNT_OUTER  38
+#define LED_COUNT_INNER  35
 
-const uint8_t PIN_LEDS = 5;
+const uint8_t PIN_LEDS_OUTER = 5;
+const uint8_t PIN_LEDS_INNER = 2;  // bodged to U1's D2 DIP leg -- carries no signal
+                                    // on rev 1 boards until this firmware is flashed
 
-Adafruit_NeoPixel leds(LED_COUNT, PIN_LEDS, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel ledsOuter(LED_COUNT_OUTER, PIN_LEDS_OUTER, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel ledsInner(LED_COUNT_INNER, PIN_LEDS_INNER, NEO_GRB + NEO_KHZ800);
 
 // -- RFID --------------------------------------------------------------------
 const uint8_t RST_PIN = 9;
@@ -70,31 +84,64 @@ const unsigned int  RF_PULSE_LEN = 613;  // confirmed against the real outlet 20
                                           // the outlet's receiver needed a notably shorter pulse (560-665us worked)
 const uint8_t        RF_REPEAT   = 5;  // 433MHz is fire-and-forget, no ACK -- resend
 
+// -- Thermal test mode ---------------------------------------------------------
+// 1 = hold the solid-green state indefinitely (thermal soak test, to check LED/
+//     driver temperatures under sustained load) -- deliberately halts here and
+//     never returns, so card polling stops too. Power-cycle to reset.
+// 0 = normal production behavior: hold green for HOLD_MS, then off, then resume
+//     polling for the next tap.
+// Compile-time only -- flip this and reflash, not a runtime toggle.
+#define THERMAL_TEST_MODE 0
+
+const unsigned long HOLD_MS = 15000UL;  // production hold duration; unused in THERMAL_TEST_MODE
+
 // -- Animation -----------------------------------------------------------------
-const int SPIN_SPEED = 50;  // ms per step in chase animation
-const uint8_t R_IDLE = 255, G_IDLE = 255, B_IDLE = 0;  // yellow
+const uint8_t  SPIN_LAPS = 3;
+const float    SPIN_DELAY_START_MS = 60.0;  // delay per step at the start of the spin
+const float    SPIN_DELAY_END_MS   = 5.0;   // delay per step at the end -- exponential ramp between the two
+const uint8_t  R_SPIN = 255, G_SPIN = 255, B_SPIN = 255;  // white
+const uint8_t  R_HOLD = 0,   G_HOLD = 255, B_HOLD = 0;    // green
 
 // -- State -----------------------------------------------------------------------
 bool treeOn = false;
 
 //*******************************************************************************//
 
-void ledsOff() {
-  leds.fill(0);
-  leds.show();
+void allOff() {
+  ledsOuter.fill(0);
+  ledsOuter.show();
+  ledsInner.fill(0);
+  ledsInner.show();
 }
 
-void spinAnimation() {
-  for (int i = leds.numPixels() - 1; i >= 0; i--) {
-    if (i < leds.numPixels() - 1)
-      leds.setPixelColor(i + 1, 0);
-    leds.setPixelColor(i, leds.Color(R_IDLE, G_IDLE, B_IDLE));
-    leds.show();
-    delay(SPIN_SPEED);
+// Single white point, outer ring only, SPIN_LAPS full laps, speeding up
+// exponentially from SPIN_DELAY_START_MS down to SPIN_DELAY_END_MS across the
+// whole sequence (not reset per lap).
+void spinAnimationOuter() {
+  const uint16_t totalSteps = (uint16_t)SPIN_LAPS * ledsOuter.numPixels();
+  int prevPixel = -1;
+
+  for (uint16_t step = 0; step < totalSteps; step++) {
+    int i = step % ledsOuter.numPixels();
+    if (prevPixel >= 0) ledsOuter.setPixelColor(prevPixel, 0);
+    ledsOuter.setPixelColor(i, ledsOuter.Color(R_SPIN, G_SPIN, B_SPIN));
+    ledsOuter.show();
+
+    float t = (totalSteps > 1) ? (float)step / (float)(totalSteps - 1) : 1.0;
+    float stepDelay = SPIN_DELAY_START_MS * pow(SPIN_DELAY_END_MS / SPIN_DELAY_START_MS, t);
+    delay((unsigned long)stepDelay);
+
+    prevPixel = i;
   }
-  leds.setPixelColor(0, 0);
-  leds.show();
-  delay(SPIN_SPEED);
+  ledsOuter.setPixelColor(prevPixel, 0);
+  ledsOuter.show();
+}
+
+void holdGreenBoth() {
+  ledsOuter.fill(ledsOuter.Color(R_HOLD, G_HOLD, B_HOLD));
+  ledsOuter.show();
+  ledsInner.fill(ledsInner.Color(R_HOLD, G_HOLD, B_HOLD));
+  ledsInner.show();
 }
 
 void fireRfCode(unsigned long code) {
@@ -113,26 +160,29 @@ bool pollCardOnce() {
   bool sawCard = mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial();
 
   if (sawCard) {
-    spinAnimation();
-    spinAnimation();
-    spinAnimation();
+    spinAnimationOuter();  // outer ring only, white, 3 laps, exponential speed-up
 
+    // RF toggle fires exactly as the solid hold begins -- same alternating
+    // on/off logic as always, just re-timed to this new sequence.
     treeOn = !treeOn;
     fireRfCode(treeOn ? RF_CODE_ON : RF_CODE_OFF);
 
-    if (treeOn) {
-      for (int i = 0; i < leds.numPixels(); i++)
-        leds.setPixelColor(i, leds.Color(R_IDLE, G_IDLE, B_IDLE));
-      leds.show();
-    } else {
-      ledsOff();
-    }
-
-    delay(2500);
-    ledsOff();
+    holdGreenBoth();  // both strips, solid green
 
     mfrc522.PICC_HaltA();
     mfrc522.PCD_StopCrypto1();
+
+#if THERMAL_TEST_MODE
+    mfrc522.PCD_SoftPowerDown();
+    // Deliberate dead-end: thermal soak test holds the green fill indefinitely
+    // to check LED/driver temperatures under sustained load. Never returns, so
+    // card polling stops here too -- power-cycle to reset. Flip
+    // THERMAL_TEST_MODE to 0 and reflash for production.
+    while (true) { delay(1000); }
+#else
+    delay(HOLD_MS);
+    allOff();
+#endif
   }
 
   mfrc522.PCD_SoftPowerDown();
@@ -153,8 +203,9 @@ void setup() {
 
   rfSwitch.enableTransmit(RF_PIN);
 
-  leds.begin();
-  ledsOff();
+  ledsOuter.begin();
+  ledsInner.begin();
+  allOff();
 
   Serial.println(F("Ready -- polling continuously, no sleep/wake."));
   Serial.flush();
