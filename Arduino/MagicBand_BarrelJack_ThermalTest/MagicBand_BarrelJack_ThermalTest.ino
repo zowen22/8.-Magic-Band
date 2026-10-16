@@ -2,15 +2,20 @@
    Magic Band -- Barrel-Jack (Wall-Powered) variant, THERMAL SOAK TEST build
    Target: bare ATmega328P-P, 5V/16MHz -- see PCB/MagicBand_BarrelJack/
 
-   Identical to Arduino/MagicBand_BarrelJack/MagicBand_BarrelJack.ino except
-   THERMAL_TEST_MODE is hardcoded to 1 below -- on the first card tap, both
-   LED strips hold solid green INDEFINITELY and the sketch deliberately never
-   returns (card polling stops too). Intended purely to check LED/driver
-   temperatures under sustained load. Power-cycle the board to reset/retest.
+   Same tap sequence as the production sketch (outer-ring white spin, RF
+   toggle, both strips solid green) EXCEPT there is no 15-second auto-off --
+   whichever state a tap lands on (green-hold ON, or OFF/dark) persists
+   indefinitely until the next tap toggles it again. Card polling never
+   stops, so you can run the soak as long as you want, tap to cool it down,
+   then tap again to resume -- no power-cycle needed between runs.
+   (Corrected 2026-10-13 -- the original version of this file hardcoded
+   THERMAL_TEST_MODE=1 from the production sketch, which froze forever
+   after the first tap and could never see a second one. That's fixed now.)
 
    DO NOT ship this build -- flash the real MagicBand_BarrelJack.ino for
-   production. This file exists only so a thermal test doesn't require
-   hand-editing (and remembering to revert) the production sketch.
+   production, which keeps the 15s auto-off. This file exists only so a
+   thermal test doesn't require hand-editing (and remembering to revert)
+   the production sketch.
 
    -- Pin Map (matches PCB/MagicBand_BarrelJack/MagicBand_BarrelJack.kicad_sch) --
    MFRC522 (SPI):
@@ -63,13 +68,6 @@ const unsigned int  RF_BITS      = 32;
 const unsigned int  RF_PROTOCOL  = 2;
 const unsigned int  RF_PULSE_LEN = 613;
 const uint8_t        RF_REPEAT   = 5;
-
-// -- Thermal test mode ---------------------------------------------------------
-// Hardcoded on for this build -- see file header. Do not flip to 0 here; use
-// the real MagicBand_BarrelJack.ino for production instead.
-#define THERMAL_TEST_MODE 1
-
-const unsigned long HOLD_MS = 15000UL;  // unused in this build
 
 // -- Animation -----------------------------------------------------------------
 const uint8_t  SPIN_LAPS = 3;
@@ -136,19 +134,17 @@ bool pollCardOnce() {
     treeOn = !treeOn;
     fireRfCode(treeOn ? RF_CODE_ON : RF_CODE_OFF);
 
-    holdGreenBoth();
+    // No auto-off timer -- whichever state this lands on persists until the
+    // next tap toggles it again. That indefinite hold IS the soak test; the
+    // point is you control how long it runs, not a fixed timer.
+    if (treeOn) {
+      holdGreenBoth();
+    } else {
+      allOff();
+    }
 
     mfrc522.PICC_HaltA();
     mfrc522.PCD_StopCrypto1();
-
-#if THERMAL_TEST_MODE
-    mfrc522.PCD_SoftPowerDown();
-    // Deliberate dead-end -- see file header. Power-cycle to reset/retest.
-    while (true) { delay(1000); }
-#else
-    delay(HOLD_MS);
-    allOff();
-#endif
   }
 
   mfrc522.PCD_SoftPowerDown();
@@ -173,7 +169,7 @@ void setup() {
   ledsInner.begin();
   allOff();
 
-  Serial.println(F("THERMAL SOAK TEST BUILD -- do not ship. Polling for the one tap that starts the soak."));
+  Serial.println(F("THERMAL SOAK TEST BUILD -- do not ship. Tap to toggle green hold on/off, no auto-timeout."));
   Serial.flush();
 }
 
