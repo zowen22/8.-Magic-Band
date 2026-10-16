@@ -13,10 +13,13 @@
 
    NeoPixels (two strips as of 2026-10-13):
      Outer ring -> D5  |  38px, denser/smaller LEDs than the original 16px strip
+       |  driven at 50% brightness (setBrightness(128)) -- also eases current
+       draw on the +5V rail, see the smoke-incident findings in WP4.3
      Inner ring -> D2  |  35px, NEW -- bodged directly to U1's DIP leg (no
        designed connector exists on rev 1; see "Build Instructions - Barrel-Jack
        Variant.md" Step 5a for the physical solder points). Rev 2 should give
-       this its own connector -- see Work Packages WP4.3.
+       this its own connector -- see Work Packages WP4.3.  |  driven at 100%
+       brightness
      Both strips' VCC wired directly to +5V, no gating -- always powered
 
    RF Transmitter (433MHz, D-FLIFE ASK TX):
@@ -204,7 +207,9 @@ void setup() {
   rfSwitch.enableTransmit(RF_PIN);
 
   ledsOuter.begin();
+  ledsOuter.setBrightness(128);  // outer ring at 50% -- also eases current draw on the +5V rail
   ledsInner.begin();
+  ledsInner.setBrightness(255);  // inner ring at 100%, explicit for clarity
   allOff();
 
   Serial.println(F("Ready -- polling continuously, no sleep/wake."));
