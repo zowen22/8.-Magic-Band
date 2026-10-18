@@ -17,7 +17,7 @@
 
    NeoPixels (two strips, same wiring as production):
      Outer ring -> D5  |  38px
-     Inner ring -> D2  |  35px -- bodged directly to U1's DIP leg, see
+     Inner ring -> D2  |  34px (corrected 2026-10-18, was 35px) -- bodged directly to U1's DIP leg, see
        "Build Instructions - Barrel-Jack Variant.md" Step 5a. Both
        strips' VCC wired directly to +5V.
 
@@ -30,7 +30,7 @@
 
 // -- LED Strip Configuration ------------------------------------------------
 #define LED_COUNT_OUTER  38
-#define LED_COUNT_INNER  35
+#define LED_COUNT_INNER  34  // corrected 2026-10-18, was 35
 
 const uint8_t PIN_LEDS_OUTER = 5;
 const uint8_t PIN_LEDS_INNER = 2;  // bodged to U1's D2 DIP leg -- see Build Instructions Step 5a

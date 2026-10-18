@@ -15,7 +15,7 @@
      Outer ring -> D5  |  38px, denser/smaller LEDs than the original 16px strip
        |  driven at 50% brightness (setBrightness(128)) -- also eases current
        draw on the +5V rail, see the smoke-incident findings in WP4.3
-     Inner ring -> D2  |  35px, NEW -- bodged directly to U1's DIP leg (no
+     Inner ring -> D2  |  34px (corrected 2026-10-18, was 35px), NEW -- bodged directly to U1's DIP leg (no
        designed connector exists on rev 1; see "Build Instructions - Barrel-Jack
        Variant.md" Step 5a for the physical solder points). Rev 2 should give
        this its own connector -- see Work Packages WP4.3.  |  driven at 100%
@@ -60,7 +60,7 @@
 // Outer ring: existing strip position, now denser/smaller LEDs -- 38px (was 16).
 // Inner ring: new strip, bodged to U1's D2 leg -- 35px. See header comment above.
 #define LED_COUNT_OUTER  38
-#define LED_COUNT_INNER  35
+#define LED_COUNT_INNER  34
 
 const uint8_t PIN_LEDS_OUTER = 5;
 const uint8_t PIN_LEDS_INNER = 2;  // bodged to U1's D2 DIP leg -- carries no signal
