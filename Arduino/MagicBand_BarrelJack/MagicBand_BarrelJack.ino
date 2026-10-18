@@ -41,13 +41,18 @@
    the tree lights are plugged into (2026-08-03). Confirmed repeatable
    across multiple presses each, not a rolling code.
 
-   -- Animation sequence, as of 2026-10-13 --
+   -- Animation sequence, as of 2026-10-13, timing fixed 2026-10-18 --
    On card tap: outer ring only spins a single white point 3 laps, speeding
-   up exponentially over the sequence. Exactly as that spin ends (start of
-   the solid hold), the RF outlet toggle fires -- same alternating on/off
-   logic as always, just re-timed to this new sequence. Both strips then
-   hold solid green. THERMAL_TEST_MODE below controls how long that hold
-   lasts -- see its comment before flashing.
+   up exponentially over the sequence. Right after the spin, the MFRC522 is
+   fully powered down BEFORE the RF outlet toggle fires (fixed 2026-10-18 --
+   firing RF while the reader was still powered, sharing the same 3.3V
+   rail, was the leading explanation for RF not reliably triggering the
+   outlet in production despite a standalone TX-only test sketch working
+   fine on the same board). Same alternating on/off RF logic as always.
+   Both strips then hold solid green for HOLD_MS -- but card-scanning
+   reopens just 1 second after RF fires, not after the full hold (fixed
+   2026-10-18, see scanLockoutUntil/holdActive). THERMAL_TEST_MODE below
+   controls how long that hold lasts -- see its comment before flashing.
 */
 
 #include <SPI.h>
@@ -107,6 +112,9 @@ const uint8_t  R_HOLD = 0,   G_HOLD = 255, B_HOLD = 0;    // green
 
 // -- State -----------------------------------------------------------------------
 bool treeOn = false;
+bool holdActive = false;
+unsigned long holdEndAt = 0;
+unsigned long scanLockoutUntil = 0;  // RFID polling is skipped entirely until this time
 
 //*******************************************************************************//
 
@@ -157,6 +165,11 @@ void fireRfCode(unsigned long code) {
 // One duty cycle: RFID powered up, briefly polled, powered back down.
 // Returns true if a card was seen and handled.
 bool pollCardOnce() {
+  // Skip the RFID entirely during the post-fire lockout -- also means we
+  // don't re-power it needlessly while a card might still be sitting on
+  // the reader right after a tap.
+  if (millis() < scanLockoutUntil) return false;
+
   mfrc522.PCD_SoftPowerUp();
   delay(2);  // datasheet-recommended settle time after power-up
 
@@ -165,6 +178,17 @@ bool pollCardOnce() {
   if (sawCard) {
     spinAnimationOuter();  // outer ring only, white, 3 laps, exponential speed-up
 
+    // Power the MFRC522 all the way down BEFORE firing RF, not after (fixed
+    // 2026-10-18). Both modules share the 3.3V regulator rail, and the RF
+    // TX module's transmission is timing-sensitive -- leaving the reader
+    // still actively powered (its own 13.56MHz field possibly still
+    // settling) right when RF needs to fire is the leading explanation for
+    // why a standalone TX-only test sketch (no MFRC522 at all) transmitted
+    // reliably on this same board while production didn't.
+    mfrc522.PICC_HaltA();
+    mfrc522.PCD_StopCrypto1();
+    mfrc522.PCD_SoftPowerDown();
+
     // RF toggle fires exactly as the solid hold begins -- same alternating
     // on/off logic as always, just re-timed to this new sequence.
     treeOn = !treeOn;
@@ -172,19 +196,20 @@ bool pollCardOnce() {
 
     holdGreenBoth();  // both strips, solid green
 
-    mfrc522.PICC_HaltA();
-    mfrc522.PCD_StopCrypto1();
-
 #if THERMAL_TEST_MODE
-    mfrc522.PCD_SoftPowerDown();
     // Deliberate dead-end: thermal soak test holds the green fill indefinitely
     // to check LED/driver temperatures under sustained load. Never returns, so
     // card polling stops here too -- power-cycle to reset. Flip
     // THERMAL_TEST_MODE to 0 and reflash for production.
     while (true) { delay(1000); }
 #else
-    delay(HOLD_MS);
-    allOff();
+    // Card-scanning reopens just 1s after RF fires (fixed 2026-10-18) --
+    // decoupled from how long the LEDs stay lit. The green hold itself
+    // still runs the full HOLD_MS, timed out separately in loop().
+    scanLockoutUntil = millis() + 1000UL;
+    holdActive = true;
+    holdEndAt = millis() + HOLD_MS;
+    return true;  // MFRC522 already powered down above -- skip the redundant call below
 #endif
   }
 
@@ -217,6 +242,13 @@ void setup() {
 }
 
 void loop() {
+  // Turns the green hold off once HOLD_MS elapses, independent of scanning
+  // (which reopens much sooner -- see scanLockoutUntil in pollCardOnce()).
+  if (holdActive && millis() >= holdEndAt) {
+    allOff();
+    holdActive = false;
+  }
+
   pollCardOnce();
   delay(50);  // small idle margin between soft-power-up/down cycles -- MFRC522 wasn't
               // characterized for zero-gap continuous power-cycling, so don't hammer it
