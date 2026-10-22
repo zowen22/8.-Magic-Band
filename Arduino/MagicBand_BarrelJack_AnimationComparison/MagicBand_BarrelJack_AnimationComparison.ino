@@ -151,9 +151,9 @@ void halfRingSpin(float lapSeconds, uint8_t numSpins) {
 void setup() {
   Serial.begin(9600);
   ledsOuter.begin();
-  ledsOuter.setBrightness(128);  // match production: outer at 50%
+  ledsOuter.setBrightness(64);  // 25%
   ledsInner.begin();
-  ledsInner.setBrightness(255);  // match production: inner at 100%
+  ledsInner.setBrightness(64);  // 25%
   allOff();
   Serial.println(F("ANIMATION COMPARISON -- do not ship. Cycling: existing / fillEmpty-1/3s / fillEmpty-1/4s / halfRing-1/3s."));
   Serial.flush();
