@@ -1,128 +1,86 @@
 /*
-   Magic Band -- Barrel-Jack variant, ANIMATION COMPARISON build (2026-10-22, live-tunable)
+   Magic Band -- Barrel-Jack variant, ANIMATION COMPARISON build (2026-10-22, tag-scan version)
    Target: bare ATmega328P-P, 5V/16MHz -- see PCB/MagicBand_BarrelJack/
 
-   No RFID, no RF, no card scan needed. Three outer-ring spin variants,
-   all parameters live-adjustable over Serial (9600 baud) so you can dial
-   things in against a video reference without reflashing:
+   Tap a card to advance to the NEXT animation and play it once. Each tap
+   cycles EXISTING -> FILLEMPTY -> HALFRING -> HALFRINGDIM -> EXISTING ->
+   ... so you can compare them side by side against reference footage one
+   tap at a time.
 
-   Serial commands (type in the Serial Monitor, Enter to send):
-     b<0-255>   brightness, both strips                (e.g. "b64" = 25%)
-     l<seconds> lap duration, e.g. "l0.25" for a quarter-second lap
-     h<seconds> hold duration in cycle mode only, e.g. "h1.5"
-     m<-1|0|1|2> which animation runs:
-                  -1 = cycle all three (default, original comparison behavior)
-                   0 = EXISTING only, looped continuously
-                   1 = FILLEMPTY only, looped continuously
-                   2 = HALFRING only, looped continuously
-     p or ?     print current settings
+   The RFID reader stays powered continuously -- no power-up/power-down
+   cycling between taps (this is a wall-powered bench/comparison build,
+   not the battery-conscious production sketch, so there's no reason to
+   power-cycle it). After each animation finishes, there's a flat delay
+   (ANIMATION_GAP_MS below) before the next tap is acted on -- the reader
+   keeps running through that gap, a new tap just isn't processed until
+   it elapses, mainly so the same card sitting on the reader doesn't
+   immediately re-trigger the next animation before you've lifted it off.
 
-   In single-animation mode (m0/m1/m2) the pattern just loops forever, no
-   hold in between -- meant for staring at one pattern on repeat while you
-   tune l/b live against reference footage. Mode -1 restores the original
-   cycle-through-all-three behavior.
-
-   Brightness and lap-duration changes apply within a few pixel-steps,
-   not just at the next full lap -- stepDelay is recomputed from the live
-   globals every step, not cached once per call.
-
-   The three variants:
-   1. EXISTING -- single white point, 3 laps, exponential speed-up
-      (60ms/step start, 5ms/step end) -- not affected by the `l` command,
-      it has its own fixed ramp.
-   2. FILLEMPTY -- ring fills (counterclockwise from pixel 0) over one
-      lap, then seamlessly continues spinning but emptying over the next
-      lap. One lap = `l` seconds.
-   3. HALFRING -- half the strip lit as a contiguous arc, spinning as a
-      block. One full rotation = `l` seconds.
+   All the parameters you'd want to change are grouped at the top, below
+   -- edit a value, reflash, no need to hunt through the animation code
+   itself.
 
    DO NOT ship this build -- flash the real MagicBand_BarrelJack.ino for
    production.
 
    NeoPixels:
-     Outer ring -> D5  |  38px
+     Outer ring -> D5  |  38px -- all three animations are outer-ring-only
      Inner ring -> D2  |  34px -- bodged directly to U1's DIP leg, see
-       "Build Instructions - Barrel-Jack Variant.md" Step 5a
+       "Build Instructions - Barrel-Jack Variant.md" Step 5a -- stays off
+       except during the green hold after each animation
+
+   MFRC522 (SPI):
+     RST -> D9  |  SS -> D4  |  MOSI -> D11  |  MISO -> D12  |  SCK -> D13
 */
 
+#include <SPI.h>
+#include <MFRC522.h>
 #include <Adafruit_NeoPixel.h>
 #include <math.h>
 
-// -- LED Strip Configuration ------------------------------------------------
+// ============================================================================
+// EASY-TO-EDIT PARAMETERS -- change these, reflash, nothing else to hunt for
+// ============================================================================
+
 #define LED_COUNT_OUTER  38
 #define LED_COUNT_INNER  34
 
 const uint8_t PIN_LEDS_OUTER = 5;
-const uint8_t PIN_LEDS_INNER = 2;  // bodged to U1's D2 DIP leg -- see Build Instructions Step 5a
+const uint8_t PIN_LEDS_INNER = 2;   // bodged to U1's D2 DIP leg -- see Build Instructions Step 5a
+
+const uint8_t BRIGHTNESS_OUTER = 64;  // 0-255 (64 = 25%)
+const uint8_t BRIGHTNESS_INNER = 64;  // 0-255 (64 = 25%)
+
+const float   FILLEMPTY_LAP_SECONDS = 1.0 / 3.0;  // one fill lap or one empty lap
+const uint8_t FILLEMPTY_NUM_SPINS   = 3;           // fill, empty, fill (odd count ends fully lit)
+
+const float   HALFRING_LAP_SECONDS = 1.0 / 3.0;    // one full rotation of the half-lit arc
+const uint8_t HALFRING_NUM_SPINS   = 3;             // full rotations
+
+const float   HALFRINGDIM_LAP_SECONDS = 1.0 / 3.0;  // same idea as HALFRING, but the "off" half glows dim instead of going dark
+const uint8_t HALFRINGDIM_NUM_SPINS   = 3;
+const uint8_t HALFRINGDIM_DIM_LEVEL   = 20;          // 0-255 brightness of the dim half (20 = faint glow, not off)
+
+const unsigned long HOLD_MS         = 500UL;   // both strips green, after each animation finishes
+const unsigned long ANIMATION_GAP_MS = 1000UL; // flat delay after each run before the next tap is acted on -- reader stays powered/scanning through this, just not acted on
+
+const uint8_t R_SPIN = 255, G_SPIN = 255, B_SPIN = 255;  // white, all three animations
+const uint8_t R_HOLD = 0,   G_HOLD = 255, B_HOLD = 0;    // green, the post-animation hold
+
+// ============================================================================
+// End of editable parameters
+// ============================================================================
 
 Adafruit_NeoPixel ledsOuter(LED_COUNT_OUTER, PIN_LEDS_OUTER, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel ledsInner(LED_COUNT_INNER, PIN_LEDS_INNER, NEO_GRB + NEO_KHZ800);
 
-const uint8_t R_SPIN = 255, G_SPIN = 255, B_SPIN = 255;  // white
-const uint8_t R_HOLD = 0,   G_HOLD = 255, B_HOLD = 0;    // green
+const uint8_t RST_PIN = 9;
+const uint8_t SS_PIN  = 4;
+MFRC522 mfrc522(SS_PIN, RST_PIN);
 
-// -- Live-tunable parameters, changed only via Serial commands --------------
-uint8_t brightness = 64;      // 25%
-float   lapSeconds  = 1.0 / 3.0;
-float   holdSeconds = 0.5;
-int8_t  mode = -1;             // -1 = cycle all, 0/1/2 = single animation looped
+uint8_t currentAnimation = 0;  // 0=existing, 1=fillEmpty, 2=halfRing -- advances on every tap
 
 //*******************************************************************************//
-
-void printSettings() {
-  Serial.print(F("brightness=")); Serial.print(brightness);
-  Serial.print(F("  lapSeconds=")); Serial.print(lapSeconds, 3);
-  Serial.print(F("  holdSeconds=")); Serial.print(holdSeconds, 3);
-  Serial.print(F("  mode=")); Serial.println(mode);
-}
-
-// Non-blocking: processes at most one pending command line per call. Call
-// this frequently (every pixel-step) so changes feel live, not just at the
-// next full animation cycle.
-void checkSerial() {
-  if (!Serial.available()) return;
-  String line = Serial.readStringUntil('\n');
-  line.trim();
-  if (line.length() == 0) return;
-
-  char cmd = line.charAt(0);
-  String rest = line.substring(1);
-
-  switch (cmd) {
-    case 'b': {
-      int v = constrain(rest.toInt(), 0, 255);
-      brightness = (uint8_t)v;
-      ledsOuter.setBrightness(brightness);
-      ledsInner.setBrightness(brightness);
-      printSettings();
-      break;
-    }
-    case 'l': {
-      float v = rest.toFloat();
-      if (v > 0.01) lapSeconds = v;
-      printSettings();
-      break;
-    }
-    case 'h': {
-      float v = rest.toFloat();
-      if (v >= 0) holdSeconds = v;
-      printSettings();
-      break;
-    }
-    case 'm': {
-      int v = rest.toInt();
-      if (v >= -1 && v <= 2) mode = (int8_t)v;
-      printSettings();
-      break;
-    }
-    case 'p':
-    case '?':
-      printSettings();
-      break;
-    default:
-      Serial.println(F("unknown command -- use b/l/h/m/p"));
-  }
-}
 
 void allOff() {
   ledsOuter.fill(0);
@@ -136,14 +94,10 @@ void holdBothGreen() {
   ledsOuter.show();
   ledsInner.fill(ledsInner.Color(R_HOLD, G_HOLD, B_HOLD));
   ledsInner.show();
-  unsigned long start = millis();
-  while (millis() - start < (unsigned long)(holdSeconds * 1000.0)) {
-    checkSerial();
-    delay(20);
-  }
+  delay(HOLD_MS);
 }
 
-// -- EXISTING (production animation, fixed exponential ramp, not `l`-tunable) --
+// -- Animation 0: EXISTING (production animation, unchanged) ----------------
 void existingSpin() {
   const uint8_t  SPIN_LAPS = 3;
   const float    SPIN_DELAY_START_MS = 60.0;
@@ -152,7 +106,6 @@ void existingSpin() {
   int prevPixel = -1;
 
   for (uint16_t step = 0; step < totalSteps; step++) {
-    checkSerial();
     int i = step % ledsOuter.numPixels();
     if (prevPixel >= 0) ledsOuter.setPixelColor(prevPixel, 0);
     ledsOuter.setPixelColor(i, ledsOuter.Color(R_SPIN, G_SPIN, B_SPIN));
@@ -168,77 +121,110 @@ void existingSpin() {
   ledsOuter.show();
 }
 
-// -- FILLEMPTY -- one lap = `lapSeconds`, recomputed live every step --------
-void fillEmptySpin(uint8_t numSpins) {
+// -- Animation 1: FILLEMPTY ---------------------------------------------------
+// One "spin" = one full lap of either filling (pixel 0 upward lighting up)
+// or emptying (pixel 0 upward turning off) -- alternating, starting with
+// fill. FILLEMPTY_NUM_SPINS=3 -> fill, empty, fill (ends fully lit).
+void fillEmptySpin() {
   uint16_t n = ledsOuter.numPixels();
+  uint16_t stepDelay = (uint16_t)(FILLEMPTY_LAP_SECONDS * 1000.0 / n);
   bool filling = true;
 
-  for (uint8_t s = 0; s < numSpins; s++) {
+  for (uint8_t s = 0; s < FILLEMPTY_NUM_SPINS; s++) {
     for (uint16_t f = 0; f < n; f++) {
-      checkSerial();
       ledsOuter.setPixelColor(f, filling ? ledsOuter.Color(R_SPIN, G_SPIN, B_SPIN) : 0);
       ledsOuter.show();
-      uint16_t stepDelay = (uint16_t)(lapSeconds * 1000.0 / n);
       delay(stepDelay);
     }
     filling = !filling;
   }
 }
 
-// -- HALFRING -- one rotation = `lapSeconds`, recomputed live every step ----
-void halfRingSpin(uint8_t numSpins) {
+// -- Animation 2: HALFRING ----------------------------------------------------
+// A contiguous arc of half the strip lit, spinning as a block. One full
+// rotation (arc returns to its starting position) = HALFRING_LAP_SECONDS.
+void halfRingSpin() {
   uint16_t n = ledsOuter.numPixels();
   uint16_t arcLen = n / 2;
+  uint16_t stepDelay = (uint16_t)(HALFRING_LAP_SECONDS * 1000.0 / n);
 
-  for (uint8_t s = 0; s < numSpins; s++) {
+  for (uint8_t s = 0; s < HALFRING_NUM_SPINS; s++) {
     for (uint16_t shift = 0; shift < n; shift++) {
-      checkSerial();
       for (uint16_t i = 0; i < n; i++) {
         uint16_t rel = (i + n - shift) % n;
         ledsOuter.setPixelColor(i, (rel < arcLen) ? ledsOuter.Color(R_SPIN, G_SPIN, B_SPIN) : 0);
       }
       ledsOuter.show();
-      uint16_t stepDelay = (uint16_t)(lapSeconds * 1000.0 / n);
       delay(stepDelay);
     }
   }
 }
 
+// -- Animation 3: HALFRINGDIM -------------------------------------------------
+// Same as HALFRING, but the "off" half glows at HALFRINGDIM_DIM_LEVEL
+// instead of going fully dark -- a soft trailing glow behind the bright half.
+void halfRingDimSpin() {
+  uint16_t n = ledsOuter.numPixels();
+  uint16_t arcLen = n / 2;
+  uint16_t stepDelay = (uint16_t)(HALFRINGDIM_LAP_SECONDS * 1000.0 / n);
+  uint32_t dimColor = ledsOuter.Color(HALFRINGDIM_DIM_LEVEL, HALFRINGDIM_DIM_LEVEL, HALFRINGDIM_DIM_LEVEL);
+
+  for (uint8_t s = 0; s < HALFRINGDIM_NUM_SPINS; s++) {
+    for (uint16_t shift = 0; shift < n; shift++) {
+      for (uint16_t i = 0; i < n; i++) {
+        uint16_t rel = (i + n - shift) % n;
+        ledsOuter.setPixelColor(i, (rel < arcLen) ? ledsOuter.Color(R_SPIN, G_SPIN, B_SPIN) : dimColor);
+      }
+      ledsOuter.show();
+      delay(stepDelay);
+    }
+  }
+}
+
+void runCurrentAnimation() {
+  switch (currentAnimation) {
+    case 0: Serial.println(F("Playing: EXISTING"));     existingSpin();     break;
+    case 1: Serial.println(F("Playing: FILLEMPTY"));    fillEmptySpin();    break;
+    case 2: Serial.println(F("Playing: HALFRING"));     halfRingSpin();     break;
+    case 3: Serial.println(F("Playing: HALFRINGDIM"));  halfRingDimSpin();  break;
+  }
+}
+
 void setup() {
   Serial.begin(9600);
+  unsigned long t0 = millis();
+  while (!Serial && millis() - t0 < 2000);
+
+  SPI.begin();
+  mfrc522.PCD_Init();
+  // Deliberately no PCD_SoftPowerDown() here -- reader stays powered/
+  // scanning continuously for this comparison build, unlike production's
+  // battery-conscious power-cycling.
+
   ledsOuter.begin();
-  ledsOuter.setBrightness(brightness);
+  ledsOuter.setBrightness(BRIGHTNESS_OUTER);
   ledsInner.begin();
-  ledsInner.setBrightness(brightness);
+  ledsInner.setBrightness(BRIGHTNESS_INNER);
   allOff();
-  Serial.println(F("ANIMATION COMPARISON (live-tunable) -- do not ship."));
-  Serial.println(F("Commands: b<0-255> l<seconds> h<seconds> m<-1|0|1|2> p"));
-  printSettings();
+
+  Serial.println(F("ANIMATION COMPARISON (tag-scan) -- do not ship. Tap to advance: EXISTING -> FILLEMPTY -> HALFRING -> ..."));
 }
 
 void loop() {
-  checkSerial();
+  bool sawCard = mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial();
 
-  switch (mode) {
-    case 0:
-      existingSpin();
-      break;
-    case 1:
-      fillEmptySpin(2);  // one fill + one empty = one clean repeating unit
-      break;
-    case 2:
-      halfRingSpin(1);   // one full rotation per call, loop() repeats it
-      break;
-    default:  // -1: cycle all three, original comparison behavior
-      existingSpin();
-      holdBothGreen();
-      allOff();
-      fillEmptySpin(3);
-      holdBothGreen();
-      allOff();
-      halfRingSpin(3);
-      holdBothGreen();
-      allOff();
-      break;
+  if (sawCard) {
+    mfrc522.PICC_HaltA();
+    mfrc522.PCD_StopCrypto1();
+
+    runCurrentAnimation();
+    holdBothGreen();
+    allOff();
+
+    currentAnimation = (currentAnimation + 1) % 4;
+
+    // Flat gap before the next tap is acted on -- reader keeps running
+    // through this, a new card just isn't processed until it elapses.
+    delay(ANIMATION_GAP_MS);
   }
 }
