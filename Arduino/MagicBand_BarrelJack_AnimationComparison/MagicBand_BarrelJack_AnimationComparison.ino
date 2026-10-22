@@ -2,19 +2,18 @@
    Magic Band -- Barrel-Jack variant, ANIMATION COMPARISON build (2026-10-22, tag-scan version)
    Target: bare ATmega328P-P, 5V/16MHz -- see PCB/MagicBand_BarrelJack/
 
-   Tap a card to advance to the NEXT animation and play it once. Each tap
-   cycles EXISTING -> FILLEMPTY -> HALFRING -> HALFRINGDIM -> EXISTING ->
-   ... so you can compare them side by side against reference footage one
-   tap at a time.
+   Loops the CURRENT animation continuously from power-up -- no tap
+   needed to start. A tap just advances which animation is selected,
+   cycling EXISTING -> FILLEMPTY -> HALFRING -> HALFRINGDIM -> EXISTING ->
+   ..., and the newly-selected one takes over on the next play-through.
+   ANIMATION_GAP_MS (below) is the pause between each loop/repetition of
+   whichever animation is currently playing, not a tap debounce.
 
    The RFID reader stays powered continuously -- no power-up/power-down
-   cycling between taps (this is a wall-powered bench/comparison build,
-   not the battery-conscious production sketch, so there's no reason to
-   power-cycle it). After each animation finishes, there's a flat delay
-   (ANIMATION_GAP_MS below) before the next tap is acted on -- the reader
-   keeps running through that gap, a new tap just isn't processed until
-   it elapses, mainly so the same card sitting on the reader doesn't
-   immediately re-trigger the next animation before you've lifted it off.
+   cycling (this is a wall-powered bench/comparison build, not the
+   battery-conscious production sketch, so there's no reason to power-
+   cycle it). It's checked both right after each spin and throughout the
+   gap, so a tap registers quickly regardless of when it happens.
 
    All the parameters you'd want to change are grouped at the top, below
    -- edit a value, reflash, no need to hunt through the animation code
@@ -190,6 +189,22 @@ void runCurrentAnimation() {
   }
 }
 
+// Checks for a tap once. If seen, advances currentAnimation to the next
+// one in the cycle and returns true. Call this frequently (between spins,
+// and throughout the gap) so the reader is effectively always scanning.
+bool checkForTapAndAdvance() {
+  bool sawCard = mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial();
+  if (sawCard) {
+    mfrc522.PICC_HaltA();
+    mfrc522.PCD_StopCrypto1();
+    currentAnimation = (currentAnimation + 1) % 4;
+    Serial.print(F("Tap -- switching to animation "));
+    Serial.println(currentAnimation);
+    return true;
+  }
+  return false;
+}
+
 void setup() {
   Serial.begin(9600);
   unsigned long t0 = millis();
@@ -207,24 +222,23 @@ void setup() {
   ledsInner.setBrightness(BRIGHTNESS_INNER);
   allOff();
 
-  Serial.println(F("ANIMATION COMPARISON (tag-scan) -- do not ship. Tap to advance: EXISTING -> FILLEMPTY -> HALFRING -> ..."));
+  Serial.println(F("ANIMATION COMPARISON (tag-scan) -- do not ship. Loops the current animation continuously from power-up; tap advances to the next one."));
 }
 
 void loop() {
-  bool sawCard = mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial();
+  // The current animation always plays, tap or no tap -- a tap just
+  // advances which one is selected for the NEXT play-through.
+  runCurrentAnimation();
+  holdBothGreen();
+  allOff();
 
-  if (sawCard) {
-    mfrc522.PICC_HaltA();
-    mfrc522.PCD_StopCrypto1();
+  checkForTapAndAdvance();
 
-    runCurrentAnimation();
-    holdBothGreen();
-    allOff();
-
-    currentAnimation = (currentAnimation + 1) % 4;
-
-    // Flat gap before the next tap is acted on -- reader keeps running
-    // through this, a new card just isn't processed until it elapses.
-    delay(ANIMATION_GAP_MS);
+  // Gap between loops -- reader stays active/checked throughout, so a tap
+  // during the gap (not just right after a spin) still registers.
+  unsigned long start = millis();
+  while (millis() - start < ANIMATION_GAP_MS) {
+    checkForTapAndAdvance();
+    delay(20);
   }
 }
