@@ -25,9 +25,15 @@
 
    Both half-fill animations (HALFRINGACCEL and HALFRINGDIM) now taper
    the lit arc's own leading/trailing edges to a dim fade instead of a
-   hard on/off cutoff (HALFRING_TAPER_PIXELS/_MIN below) -- a small,
-   shared change applied to both, independent of whether the "off" half
-   is fully dark (HALFRINGACCEL) or dimly glowing (HALFRINGDIM).
+   hard on/off cutoff (HALFRING_TAPER_PIXELS/_MIN below), and both share
+   the exact same accelerating architecture (2026-10-23) -- independent
+   HALFRINGDIM_ACCEL_* parameters, but the same code path. Both also
+   start with a sequential pixel-by-pixel build-up instead of flipping
+   the whole arc on at once -- that's the moment a real tap would
+   trigger the animation, so it reads as a deliberate reveal rather
+   than a snap. The build-up is just the FIRST segment of the same
+   accel curve (so it naturally gets the longest duration) and counts
+   against the same total -- there's no separate "extra" time for it.
 
    The RFID reader stays powered continuously -- no power-up/power-down
    cycling (this is a wall-powered bench/comparison build, not the
@@ -73,13 +79,17 @@ const uint8_t BRIGHTNESS_INNER = 64;  // 0-255 (64 = 25%)
 const float   FILLEMPTY_LAP_SECONDS = 1.0 / 3.0;  // one fill lap or one empty lap
 const uint8_t FILLEMPTY_NUM_SPINS   = 3;           // fill, empty, fill (odd count ends fully lit)
 
-const float   HALFRING_ACCEL_TOTAL_SECONDS = 2.5;  // whole animation's duration -- change this alone, the per-lap timing rescales automatically
-const uint8_t HALFRING_ACCEL_NUM_SPINS     = 8;     // number of rotations within that total
-const float   HALFRING_ACCEL_RATIO         = 1.8;   // first rotation takes this many times longer than the last (shape of the acceleration, independent of total time)
+const float   HALFRING_ACCEL_TOTAL_SECONDS = 1.75;  // whole animation's duration, INCLUDING the initial build-up below -- change this alone, everything rescales automatically
+const uint8_t HALFRING_ACCEL_NUM_SPINS     = 8;      // number of rotations after the build-up
+const float   HALFRING_ACCEL_RATIO         = 2.5;    // first segment (the build-up) takes this many times longer than the last rotation (shape of the acceleration, independent of total time)
 
-const float   HALFRINGDIM_LAP_SECONDS = 1.0 / 3.0;  // same idea as HALFRINGACCEL, but the "off" half glows dim instead of going dark, and at a constant speed
-const uint8_t HALFRINGDIM_NUM_SPINS   = 3;
-const uint8_t HALFRINGDIM_DIM_LEVEL   = 20;          // 0-255 brightness of the dim half (20 = faint glow, not off)
+// HALFRINGDIM follows the exact same accelerating architecture as
+// HALFRINGACCEL (own independently-tunable timing), just with the "off"
+// half glowing dim instead of going fully dark.
+const float   HALFRINGDIM_ACCEL_TOTAL_SECONDS = 1.75;
+const uint8_t HALFRINGDIM_ACCEL_NUM_SPINS     = 8;
+const float   HALFRINGDIM_ACCEL_RATIO         = 2.5;
+const uint8_t HALFRINGDIM_DIM_LEVEL           = 20;  // 0-255 brightness of the dim half (20 = faint glow, not off)
 
 // Shared by both half-fill animations: tapers the lit arc's own edges to a
 // dim fade instead of a hard cutoff.
@@ -174,31 +184,51 @@ uint8_t litArcBrightness(uint16_t rel, uint16_t arcLen) {
   return (uint8_t)(HALFRING_TAPER_MIN + (255 - HALFRING_TAPER_MIN) * (float)distFromEdge / (float)HALFRING_TAPER_PIXELS);
 }
 
-// -- Animation 2: HALFRINGACCEL -----------------------------------------------
-// A contiguous arc of half the strip lit (edges tapered, see litArcBrightness),
-// spinning as a block, accelerating over HALFRING_ACCEL_NUM_SPINS rotations.
-// Per-lap durations are an exponential curve from HALFRING_ACCEL_RATIO:1 down
-// to 1:1, rescaled so they always sum to exactly HALFRING_ACCEL_TOTAL_SECONDS.
-void halfRingAccelSpin() {
+// Shared architecture for both half-fill animations (Animation 2 HALFRINGACCEL
+// and Animation 3 HALFRINGDIM). First segment is a sequential build-up -- the
+// arc reveals one pixel at a time from pixel 0 upward, no rotation yet, instead
+// of flipping the whole arc on in one instant (this is the moment a real tap
+// would trigger the animation, so it's worth it reading as a deliberate
+// reveal). After that, `numSpins` full rotations follow. All numSpins+1
+// segments share one exponential accel curve (RATIO:1 down to 1:1), rescaled
+// so they always sum to exactly `totalSeconds` -- the build-up gets the
+// longest/slowest segment since it's weighted first on that curve, which is
+// the right amount of smoothness for a reveal, not an arbitrary extra delay.
+void halfRingAccelGeneric(float totalSeconds, uint8_t numSpins, float ratio, uint8_t offBrightness) {
   uint16_t n = ledsOuter.numPixels();
   uint16_t arcLen = n / 2;
+  uint8_t numSegments = numSpins + 1;  // +1 for the build-up
 
-  float weights[HALFRING_ACCEL_NUM_SPINS];
+  float weights[16];  // fixed upper bound, comfortably above any realistic numSpins
   float weightSum = 0;
-  for (uint8_t i = 0; i < HALFRING_ACCEL_NUM_SPINS; i++) {
-    float frac = (HALFRING_ACCEL_NUM_SPINS > 1) ? (float)i / (float)(HALFRING_ACCEL_NUM_SPINS - 1) : 1.0;
-    weights[i] = pow(HALFRING_ACCEL_RATIO, 1.0 - frac);  // starts at RATIO, ends at 1
+  for (uint8_t i = 0; i < numSegments; i++) {
+    float frac = (numSegments > 1) ? (float)i / (float)(numSegments - 1) : 1.0;
+    weights[i] = pow(ratio, 1.0 - frac);  // starts at ratio, ends at 1
     weightSum += weights[i];
   }
 
-  for (uint8_t s = 0; s < HALFRING_ACCEL_NUM_SPINS; s++) {
-    float lapSeconds = HALFRING_ACCEL_TOTAL_SECONDS * (weights[s] / weightSum);
+  // Segment 0: sequential build-up, arc fills in pixel-by-pixel, no rotation.
+  float buildupSeconds = totalSeconds * (weights[0] / weightSum);
+  uint16_t buildupStepDelay = (uint16_t)(buildupSeconds * 1000.0 / arcLen);
+  for (uint16_t f = 0; f < arcLen; f++) {
+    for (uint16_t i = 0; i < n; i++) {
+      uint8_t level = (i <= f) ? litArcBrightness(i, arcLen) : offBrightness;
+      ledsOuter.setPixelColor(i, ledsOuter.Color(level, level, level));
+    }
+    ledsOuter.show();
+    delay(buildupStepDelay);
+  }
+
+  // Segments 1..numSpins: the normal rotating laps, starting from the
+  // fully-revealed arc's resting position (shift=0).
+  for (uint8_t s = 1; s < numSegments; s++) {
+    float lapSeconds = totalSeconds * (weights[s] / weightSum);
     uint16_t stepDelay = (uint16_t)(lapSeconds * 1000.0 / n);
 
     for (uint16_t shift = 0; shift < n; shift++) {
       for (uint16_t i = 0; i < n; i++) {
         uint16_t rel = (i + n - shift) % n;
-        uint8_t level = (rel < arcLen) ? litArcBrightness(rel, arcLen) : 0;
+        uint8_t level = (rel < arcLen) ? litArcBrightness(rel, arcLen) : offBrightness;
         ledsOuter.setPixelColor(i, ledsOuter.Color(level, level, level));
       }
       ledsOuter.show();
@@ -207,25 +237,16 @@ void halfRingAccelSpin() {
   }
 }
 
+// -- Animation 2: HALFRINGACCEL -----------------------------------------------
+void halfRingAccelSpin() {
+  halfRingAccelGeneric(HALFRING_ACCEL_TOTAL_SECONDS, HALFRING_ACCEL_NUM_SPINS, HALFRING_ACCEL_RATIO, 0);
+}
+
 // -- Animation 3: HALFRINGDIM -------------------------------------------------
-// Same lit-arc edge taper as HALFRINGACCEL, constant speed, but the "off"
+// Same architecture as HALFRINGACCEL (own independent timing), but the "off"
 // half glows at HALFRINGDIM_DIM_LEVEL instead of going fully dark.
 void halfRingDimSpin() {
-  uint16_t n = ledsOuter.numPixels();
-  uint16_t arcLen = n / 2;
-  uint16_t stepDelay = (uint16_t)(HALFRINGDIM_LAP_SECONDS * 1000.0 / n);
-
-  for (uint8_t s = 0; s < HALFRINGDIM_NUM_SPINS; s++) {
-    for (uint16_t shift = 0; shift < n; shift++) {
-      for (uint16_t i = 0; i < n; i++) {
-        uint16_t rel = (i + n - shift) % n;
-        uint8_t level = (rel < arcLen) ? litArcBrightness(rel, arcLen) : HALFRINGDIM_DIM_LEVEL;
-        ledsOuter.setPixelColor(i, ledsOuter.Color(level, level, level));
-      }
-      ledsOuter.show();
-      delay(stepDelay);
-    }
-  }
+  halfRingAccelGeneric(HALFRINGDIM_ACCEL_TOTAL_SECONDS, HALFRINGDIM_ACCEL_NUM_SPINS, HALFRINGDIM_ACCEL_RATIO, HALFRINGDIM_DIM_LEVEL);
 }
 
 void runCurrentAnimation() {
