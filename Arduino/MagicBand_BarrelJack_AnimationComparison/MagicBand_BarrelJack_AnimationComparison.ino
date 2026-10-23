@@ -4,10 +4,30 @@
 
    Loops the CURRENT animation continuously from power-up -- no tap
    needed to start. A tap just advances which animation is selected,
-   cycling EXISTING -> FILLEMPTY -> HALFRING -> HALFRINGDIM -> EXISTING ->
-   ..., and the newly-selected one takes over on the next play-through.
-   ANIMATION_GAP_MS (below) is the pause between each loop/repetition of
-   whichever animation is currently playing, not a tap debounce.
+   cycling EXISTING -> FILLEMPTY -> HALFRINGACCEL -> HALFRINGDIM ->
+   EXISTING -> ..., and the newly-selected one takes over on the next
+   play-through. ANIMATION_GAP_MS (below) is the pause between each
+   loop/repetition of whichever animation is currently playing, not a
+   tap debounce.
+
+   HALFRINGACCEL (2026-10-23) replaces the old plain HALFRING -- built
+   from a real video reference of actual Disney park entrances. Rough
+   per-rotation timestamps read off that footage: 1.75s, 2.2s, 2.6s,
+   2.95s, 3.2s, 3.5s, 3.75s, 4.0s, then fill -- i.e. roughly 8 rotations
+   accelerating from ~0.45s/lap down to ~0.25s/lap, not perfectly
+   monotonic (video-timing read noise), used here as a rough shape
+   reference rather than replicated exactly. Implemented as an
+   exponential accel curve (HALFRING_ACCEL_RATIO controls how much
+   faster the last lap is than the first) auto-scaled so the total
+   always sums to exactly HALFRING_ACCEL_TOTAL_SECONDS regardless of
+   the other parameters -- change the total, nothing else needs
+   retuning.
+
+   Both half-fill animations (HALFRINGACCEL and HALFRINGDIM) now taper
+   the lit arc's own leading/trailing edges to a dim fade instead of a
+   hard on/off cutoff (HALFRING_TAPER_PIXELS/_MIN below) -- a small,
+   shared change applied to both, independent of whether the "off" half
+   is fully dark (HALFRINGACCEL) or dimly glowing (HALFRINGDIM).
 
    The RFID reader stays powered continuously -- no power-up/power-down
    cycling (this is a wall-powered bench/comparison build, not the
@@ -53,12 +73,18 @@ const uint8_t BRIGHTNESS_INNER = 64;  // 0-255 (64 = 25%)
 const float   FILLEMPTY_LAP_SECONDS = 1.0 / 3.0;  // one fill lap or one empty lap
 const uint8_t FILLEMPTY_NUM_SPINS   = 3;           // fill, empty, fill (odd count ends fully lit)
 
-const float   HALFRING_LAP_SECONDS = 1.0 / 3.0;    // one full rotation of the half-lit arc
-const uint8_t HALFRING_NUM_SPINS   = 3;             // full rotations
+const float   HALFRING_ACCEL_TOTAL_SECONDS = 2.5;  // whole animation's duration -- change this alone, the per-lap timing rescales automatically
+const uint8_t HALFRING_ACCEL_NUM_SPINS     = 8;     // number of rotations within that total
+const float   HALFRING_ACCEL_RATIO         = 1.8;   // first rotation takes this many times longer than the last (shape of the acceleration, independent of total time)
 
-const float   HALFRINGDIM_LAP_SECONDS = 1.0 / 3.0;  // same idea as HALFRING, but the "off" half glows dim instead of going dark
+const float   HALFRINGDIM_LAP_SECONDS = 1.0 / 3.0;  // same idea as HALFRINGACCEL, but the "off" half glows dim instead of going dark, and at a constant speed
 const uint8_t HALFRINGDIM_NUM_SPINS   = 3;
 const uint8_t HALFRINGDIM_DIM_LEVEL   = 20;          // 0-255 brightness of the dim half (20 = faint glow, not off)
+
+// Shared by both half-fill animations: tapers the lit arc's own edges to a
+// dim fade instead of a hard cutoff.
+const uint8_t HALFRING_TAPER_PIXELS = 4;   // how many pixels at each edge of the lit half fade
+const uint8_t HALFRING_TAPER_MIN    = 60;  // brightness (0-255) at the very edge pixel, before it reaches the off-arc level
 
 const unsigned long HOLD_MS         = 500UL;   // both strips green, after each animation finishes
 const unsigned long ANIMATION_GAP_MS = 1000UL; // flat delay after each run before the next tap is acted on -- reader stays powered/scanning through this, just not acted on
@@ -139,19 +165,41 @@ void fillEmptySpin() {
   }
 }
 
-// -- Animation 2: HALFRING ----------------------------------------------------
-// A contiguous arc of half the strip lit, spinning as a block. One full
-// rotation (arc returns to its starting position) = HALFRING_LAP_SECONDS.
-void halfRingSpin() {
+// Shared by both half-fill animations below: returns 0-255 brightness for a
+// pixel at position `rel` inside a lit arc of length `arcLen`, fading the
+// pixel toward the edge over HALFRING_TAPER_PIXELS instead of a hard cutoff.
+uint8_t litArcBrightness(uint16_t rel, uint16_t arcLen) {
+  uint16_t distFromEdge = min(rel, (uint16_t)(arcLen - 1 - rel));
+  if (distFromEdge >= HALFRING_TAPER_PIXELS) return 255;
+  return (uint8_t)(HALFRING_TAPER_MIN + (255 - HALFRING_TAPER_MIN) * (float)distFromEdge / (float)HALFRING_TAPER_PIXELS);
+}
+
+// -- Animation 2: HALFRINGACCEL -----------------------------------------------
+// A contiguous arc of half the strip lit (edges tapered, see litArcBrightness),
+// spinning as a block, accelerating over HALFRING_ACCEL_NUM_SPINS rotations.
+// Per-lap durations are an exponential curve from HALFRING_ACCEL_RATIO:1 down
+// to 1:1, rescaled so they always sum to exactly HALFRING_ACCEL_TOTAL_SECONDS.
+void halfRingAccelSpin() {
   uint16_t n = ledsOuter.numPixels();
   uint16_t arcLen = n / 2;
-  uint16_t stepDelay = (uint16_t)(HALFRING_LAP_SECONDS * 1000.0 / n);
 
-  for (uint8_t s = 0; s < HALFRING_NUM_SPINS; s++) {
+  float weights[HALFRING_ACCEL_NUM_SPINS];
+  float weightSum = 0;
+  for (uint8_t i = 0; i < HALFRING_ACCEL_NUM_SPINS; i++) {
+    float frac = (HALFRING_ACCEL_NUM_SPINS > 1) ? (float)i / (float)(HALFRING_ACCEL_NUM_SPINS - 1) : 1.0;
+    weights[i] = pow(HALFRING_ACCEL_RATIO, 1.0 - frac);  // starts at RATIO, ends at 1
+    weightSum += weights[i];
+  }
+
+  for (uint8_t s = 0; s < HALFRING_ACCEL_NUM_SPINS; s++) {
+    float lapSeconds = HALFRING_ACCEL_TOTAL_SECONDS * (weights[s] / weightSum);
+    uint16_t stepDelay = (uint16_t)(lapSeconds * 1000.0 / n);
+
     for (uint16_t shift = 0; shift < n; shift++) {
       for (uint16_t i = 0; i < n; i++) {
         uint16_t rel = (i + n - shift) % n;
-        ledsOuter.setPixelColor(i, (rel < arcLen) ? ledsOuter.Color(R_SPIN, G_SPIN, B_SPIN) : 0);
+        uint8_t level = (rel < arcLen) ? litArcBrightness(rel, arcLen) : 0;
+        ledsOuter.setPixelColor(i, ledsOuter.Color(level, level, level));
       }
       ledsOuter.show();
       delay(stepDelay);
@@ -160,19 +208,19 @@ void halfRingSpin() {
 }
 
 // -- Animation 3: HALFRINGDIM -------------------------------------------------
-// Same as HALFRING, but the "off" half glows at HALFRINGDIM_DIM_LEVEL
-// instead of going fully dark -- a soft trailing glow behind the bright half.
+// Same lit-arc edge taper as HALFRINGACCEL, constant speed, but the "off"
+// half glows at HALFRINGDIM_DIM_LEVEL instead of going fully dark.
 void halfRingDimSpin() {
   uint16_t n = ledsOuter.numPixels();
   uint16_t arcLen = n / 2;
   uint16_t stepDelay = (uint16_t)(HALFRINGDIM_LAP_SECONDS * 1000.0 / n);
-  uint32_t dimColor = ledsOuter.Color(HALFRINGDIM_DIM_LEVEL, HALFRINGDIM_DIM_LEVEL, HALFRINGDIM_DIM_LEVEL);
 
   for (uint8_t s = 0; s < HALFRINGDIM_NUM_SPINS; s++) {
     for (uint16_t shift = 0; shift < n; shift++) {
       for (uint16_t i = 0; i < n; i++) {
         uint16_t rel = (i + n - shift) % n;
-        ledsOuter.setPixelColor(i, (rel < arcLen) ? ledsOuter.Color(R_SPIN, G_SPIN, B_SPIN) : dimColor);
+        uint8_t level = (rel < arcLen) ? litArcBrightness(rel, arcLen) : HALFRINGDIM_DIM_LEVEL;
+        ledsOuter.setPixelColor(i, ledsOuter.Color(level, level, level));
       }
       ledsOuter.show();
       delay(stepDelay);
@@ -184,7 +232,7 @@ void runCurrentAnimation() {
   switch (currentAnimation) {
     case 0: Serial.println(F("Playing: EXISTING"));     existingSpin();     break;
     case 1: Serial.println(F("Playing: FILLEMPTY"));    fillEmptySpin();    break;
-    case 2: Serial.println(F("Playing: HALFRING"));     halfRingSpin();     break;
+    case 2: Serial.println(F("Playing: HALFRINGACCEL")); halfRingAccelSpin(); break;
     case 3: Serial.println(F("Playing: HALFRINGDIM"));  halfRingDimSpin();  break;
   }
 }
