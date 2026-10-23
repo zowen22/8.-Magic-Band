@@ -29,11 +29,12 @@
    the exact same accelerating architecture (2026-10-23) -- independent
    HALFRINGDIM_ACCEL_* parameters, but the same code path. Both also
    start with a sequential pixel-by-pixel build-up instead of flipping
-   the whole arc on at once -- that's the moment a real tap would
-   trigger the animation, so it reads as a deliberate reveal rather
-   than a snap. The build-up is just the FIRST segment of the same
-   accel curve (so it naturally gets the longest duration) and counts
-   against the same total -- there's no separate "extra" time for it.
+   the whole arc on at once. The rotation laps' own timing/shape is
+   unchanged from the version that already looked right -- the build-up
+   is tied directly to lap 1's per-pixel speed (half of lap 1's weight,
+   since the arc is exactly half the ring) so there's no speed jump at
+   the handoff, not just an approximately-close match. Still sums to
+   exactly `totalSeconds` either way.
 
    The RFID reader stays powered continuously -- no power-up/power-down
    cycling (this is a wall-powered bench/comparison build, not the
@@ -185,30 +186,32 @@ uint8_t litArcBrightness(uint16_t rel, uint16_t arcLen) {
 }
 
 // Shared architecture for both half-fill animations (Animation 2 HALFRINGACCEL
-// and Animation 3 HALFRINGDIM). First segment is a sequential build-up -- the
-// arc reveals one pixel at a time from pixel 0 upward, no rotation yet, instead
-// of flipping the whole arc on in one instant (this is the moment a real tap
-// would trigger the animation, so it's worth it reading as a deliberate
-// reveal). After that, `numSpins` full rotations follow. All numSpins+1
-// segments share one exponential accel curve (RATIO:1 down to 1:1), rescaled
-// so they always sum to exactly `totalSeconds` -- the build-up gets the
-// longest/slowest segment since it's weighted first on that curve, which is
-// the right amount of smoothness for a reveal, not an arbitrary extra delay.
+// and Animation 3 HALFRINGDIM). Starts with a sequential build-up -- the arc
+// reveals one pixel at a time from pixel 0 upward, no rotation yet, instead
+// of flipping the whole arc on in one instant -- then `numSpins` full
+// rotations follow, timed exactly as before (same RATIO:1 down to 1:1 curve,
+// unchanged shape). The build-up's speed is tied directly to lap 1's speed
+// so there's NO jump at the handoff: arcLen is exactly half of n, so giving
+// the build-up half of lap 1's weight makes its per-pixel-step delay
+// mathematically identical to lap 1's per-step delay, not just close.
+// Everything still sums to exactly `totalSeconds`.
 void halfRingAccelGeneric(float totalSeconds, uint8_t numSpins, float ratio, uint8_t offBrightness) {
   uint16_t n = ledsOuter.numPixels();
   uint16_t arcLen = n / 2;
-  uint8_t numSegments = numSpins + 1;  // +1 for the build-up
 
-  float weights[16];  // fixed upper bound, comfortably above any realistic numSpins
-  float weightSum = 0;
-  for (uint8_t i = 0; i < numSegments; i++) {
-    float frac = (numSegments > 1) ? (float)i / (float)(numSegments - 1) : 1.0;
-    weights[i] = pow(ratio, 1.0 - frac);  // starts at ratio, ends at 1
-    weightSum += weights[i];
+  float lapWeights[16];  // fixed upper bound, comfortably above any realistic numSpins
+  float lapWeightSum = 0;
+  for (uint8_t i = 0; i < numSpins; i++) {
+    float frac = (numSpins > 1) ? (float)i / (float)(numSpins - 1) : 1.0;
+    lapWeights[i] = pow(ratio, 1.0 - frac);  // starts at ratio, ends at 1
+    lapWeightSum += lapWeights[i];
   }
 
-  // Segment 0: sequential build-up, arc fills in pixel-by-pixel, no rotation.
-  float buildupSeconds = totalSeconds * (weights[0] / weightSum);
+  float buildupWeight = lapWeights[0] * 0.5;  // half of lap 1's weight, since arcLen = n/2
+  float totalWeight = buildupWeight + lapWeightSum;
+
+  // Build-up: arc fills in pixel-by-pixel, no rotation.
+  float buildupSeconds = totalSeconds * (buildupWeight / totalWeight);
   uint16_t buildupStepDelay = (uint16_t)(buildupSeconds * 1000.0 / arcLen);
   for (uint16_t f = 0; f < arcLen; f++) {
     for (uint16_t i = 0; i < n; i++) {
@@ -219,10 +222,10 @@ void halfRingAccelGeneric(float totalSeconds, uint8_t numSpins, float ratio, uin
     delay(buildupStepDelay);
   }
 
-  // Segments 1..numSpins: the normal rotating laps, starting from the
-  // fully-revealed arc's resting position (shift=0).
-  for (uint8_t s = 1; s < numSegments; s++) {
-    float lapSeconds = totalSeconds * (weights[s] / weightSum);
+  // The numSpins rotating laps, starting from the fully-revealed arc's
+  // resting position (shift=0).
+  for (uint8_t s = 0; s < numSpins; s++) {
+    float lapSeconds = totalSeconds * (lapWeights[s] / totalWeight);
     uint16_t stepDelay = (uint16_t)(lapSeconds * 1000.0 / n);
 
     for (uint16_t shift = 0; shift < n; shift++) {
