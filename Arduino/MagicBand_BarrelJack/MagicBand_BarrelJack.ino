@@ -41,10 +41,14 @@
    the tree lights are plugged into (2026-08-03). Confirmed repeatable
    across multiple presses each, not a rolling code.
 
-   -- Animation sequence, as of 2026-10-13, timing fixed 2026-10-18 --
-   On card tap: outer ring only spins a single white point 3 laps, speeding
-   up exponentially over the sequence. Right after the spin, the MFRC522 is
-   fully powered down BEFORE the RF outlet toggle fires (fixed 2026-10-18 --
+   -- Animation sequence, as of 2026-10-13, timing fixed 2026-10-18,
+   animation replaced 2026-10-25 --
+   On card tap: outer ring only shows a half-ring arc that builds up
+   pixel-by-pixel, then rotates through 8 accelerating laps (HALFRINGACCEL,
+   ported from the AnimationComparison sketch's video-reference-tuned
+   version -- see that sketch's header for the real-footage timestamps this
+   was built from). Right after the spin, the MFRC522 is fully powered down
+   BEFORE the RF outlet toggle fires (fixed 2026-10-18 --
    firing RF while the reader was still powered, sharing the same 3.3V
    rail, was the leading explanation for RF not reliably triggering the
    outlet in production despite a standalone TX-only test sketch working
@@ -103,12 +107,19 @@ const uint8_t        RF_REPEAT   = 5;  // 433MHz is fire-and-forget, no ACK -- r
 
 const unsigned long HOLD_MS = 15000UL;  // production hold duration; unused in THERMAL_TEST_MODE
 
-// -- Animation -----------------------------------------------------------------
-const uint8_t  SPIN_LAPS = 3;
-const float    SPIN_DELAY_START_MS = 60.0;  // delay per step at the start of the spin
-const float    SPIN_DELAY_END_MS   = 5.0;   // delay per step at the end -- exponential ramp between the two
-const uint8_t  R_SPIN = 255, G_SPIN = 255, B_SPIN = 255;  // white
-const uint8_t  R_HOLD = 0,   G_HOLD = 255, B_HOLD = 0;    // green
+// -- Animation (HALFRINGACCEL, ported from AnimationComparison 2026-10-25) -----
+// Whole animation's duration, INCLUDING the initial build-up -- change this
+// alone, everything else rescales automatically.
+const float   HALFRING_ACCEL_TOTAL_SECONDS = 1.75;
+const uint8_t HALFRING_ACCEL_NUM_SPINS     = 8;    // rotations after the build-up
+const float   HALFRING_ACCEL_RATIO         = 2.5;  // first rotation takes this many times longer than the last (shape, independent of total time)
+
+// Tapers the lit arc's own leading/trailing edges to a dim fade instead of a
+// hard on/off cutoff.
+const uint8_t HALFRING_TAPER_PIXELS = 4;   // how many pixels at each edge of the lit half fade
+const uint8_t HALFRING_TAPER_MIN    = 60;  // brightness (0-255) at the very edge pixel
+
+const uint8_t  R_HOLD = 0, G_HOLD = 255, B_HOLD = 0;  // green
 
 // -- State -----------------------------------------------------------------------
 bool treeOn = false;
@@ -125,27 +136,66 @@ void allOff() {
   ledsInner.show();
 }
 
-// Single white point, outer ring only, SPIN_LAPS full laps, speeding up
-// exponentially from SPIN_DELAY_START_MS down to SPIN_DELAY_END_MS across the
-// whole sequence (not reset per lap).
+// Returns 0-255 brightness for a pixel at position `rel` inside a lit arc of
+// length `arcLen`, fading the pixel toward the edge over
+// HALFRING_TAPER_PIXELS instead of a hard cutoff.
+uint8_t litArcBrightness(uint16_t rel, uint16_t arcLen) {
+  uint16_t distFromEdge = min(rel, (uint16_t)(arcLen - 1 - rel));
+  if (distFromEdge >= HALFRING_TAPER_PIXELS) return 255;
+  return (uint8_t)(HALFRING_TAPER_MIN + (255 - HALFRING_TAPER_MIN) * (float)distFromEdge / (float)HALFRING_TAPER_PIXELS);
+}
+
+// Half-ring arc, outer ring only, white. Starts with a sequential build-up
+// (the arc reveals one pixel at a time from pixel 0 upward, no rotation yet)
+// then HALFRING_ACCEL_NUM_SPINS full rotations follow, accelerating from the
+// first lap down to the last (HALFRING_ACCEL_RATIO:1). The build-up's speed
+// is tied directly to lap 1's speed so there's no jump at the handoff: arcLen
+// is exactly half of n, so giving the build-up half of lap 1's weight makes
+// its per-pixel-step delay mathematically identical to lap 1's per-step
+// delay. Everything sums to exactly HALFRING_ACCEL_TOTAL_SECONDS.
 void spinAnimationOuter() {
-  const uint16_t totalSteps = (uint16_t)SPIN_LAPS * ledsOuter.numPixels();
-  int prevPixel = -1;
+  uint16_t n = ledsOuter.numPixels();
+  uint16_t arcLen = n / 2;
 
-  for (uint16_t step = 0; step < totalSteps; step++) {
-    int i = step % ledsOuter.numPixels();
-    if (prevPixel >= 0) ledsOuter.setPixelColor(prevPixel, 0);
-    ledsOuter.setPixelColor(i, ledsOuter.Color(R_SPIN, G_SPIN, B_SPIN));
-    ledsOuter.show();
-
-    float t = (totalSteps > 1) ? (float)step / (float)(totalSteps - 1) : 1.0;
-    float stepDelay = SPIN_DELAY_START_MS * pow(SPIN_DELAY_END_MS / SPIN_DELAY_START_MS, t);
-    delay((unsigned long)stepDelay);
-
-    prevPixel = i;
+  float lapWeights[16];  // fixed upper bound, comfortably above any realistic NUM_SPINS
+  float lapWeightSum = 0;
+  for (uint8_t i = 0; i < HALFRING_ACCEL_NUM_SPINS; i++) {
+    float frac = (HALFRING_ACCEL_NUM_SPINS > 1) ? (float)i / (float)(HALFRING_ACCEL_NUM_SPINS - 1) : 1.0;
+    lapWeights[i] = pow(HALFRING_ACCEL_RATIO, 1.0 - frac);  // starts at ratio, ends at 1
+    lapWeightSum += lapWeights[i];
   }
-  ledsOuter.setPixelColor(prevPixel, 0);
-  ledsOuter.show();
+
+  float buildupWeight = lapWeights[0] * 0.5;  // half of lap 1's weight, since arcLen = n/2
+  float totalWeight = buildupWeight + lapWeightSum;
+
+  // Build-up: arc fills in pixel-by-pixel, no rotation.
+  float buildupSeconds = HALFRING_ACCEL_TOTAL_SECONDS * (buildupWeight / totalWeight);
+  uint16_t buildupStepDelay = (uint16_t)(buildupSeconds * 1000.0 / arcLen);
+  for (uint16_t f = 0; f < arcLen; f++) {
+    for (uint16_t i = 0; i < n; i++) {
+      uint8_t level = (i <= f) ? litArcBrightness(i, arcLen) : 0;
+      ledsOuter.setPixelColor(i, ledsOuter.Color(level, level, level));
+    }
+    ledsOuter.show();
+    delay(buildupStepDelay);
+  }
+
+  // The accelerating rotating laps, starting from the fully-revealed arc's
+  // resting position (shift=0).
+  for (uint8_t s = 0; s < HALFRING_ACCEL_NUM_SPINS; s++) {
+    float lapSeconds = HALFRING_ACCEL_TOTAL_SECONDS * (lapWeights[s] / totalWeight);
+    uint16_t stepDelay = (uint16_t)(lapSeconds * 1000.0 / n);
+
+    for (uint16_t shift = 0; shift < n; shift++) {
+      for (uint16_t i = 0; i < n; i++) {
+        uint16_t rel = (i + n - shift) % n;
+        uint8_t level = (rel < arcLen) ? litArcBrightness(rel, arcLen) : 0;
+        ledsOuter.setPixelColor(i, ledsOuter.Color(level, level, level));
+      }
+      ledsOuter.show();
+      delay(stepDelay);
+    }
+  }
 }
 
 void holdGreenBoth() {
