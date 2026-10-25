@@ -42,20 +42,22 @@
    across multiple presses each, not a rolling code.
 
    -- Animation sequence, as of 2026-10-13, timing fixed 2026-10-18,
-   animation replaced 2026-10-25 --
-   On card tap: outer ring only shows a half-ring arc that builds up
-   pixel-by-pixel, then rotates through 8 accelerating laps (HALFRINGACCEL,
+   animation replaced 2026-10-25, hold-override/transition fixed 2026-10-25 --
+   On card tap: any hold still showing is cleared immediately (a new tap
+   always overrides) -- outer ring then shows a half-ring arc that builds up
+   pixel-by-pixel and rotates through 8 accelerating laps (HALFRINGACCEL,
    ported from the AnimationComparison sketch's video-reference-tuned
    version -- see that sketch's header for the real-footage timestamps this
-   was built from). Right after the spin, the MFRC522 is fully powered down
-   BEFORE the RF outlet toggle fires (fixed 2026-10-18 --
-   firing RF while the reader was still powered, sharing the same 3.3V
-   rail, was the leading explanation for RF not reliably triggering the
-   outlet in production despite a standalone TX-only test sketch working
-   fine on the same board). Same alternating on/off RF logic as always.
-   Both strips then hold solid green for HOLD_MS -- but card-scanning
-   reopens just 1 second after RF fires, not after the full hold (fixed
-   2026-10-18, see scanLockoutUntil/holdActive). THERMAL_TEST_MODE below
+   was built from). Both strips go straight to the solid-green hold the
+   instant the spin ends -- no gap -- same as the comparison sketch's own
+   animation -> hold transition. The MFRC522 is then fully powered down
+   BEFORE the RF outlet toggle fires (fixed 2026-10-18 -- firing RF while the
+   reader was still powered, sharing the same 3.3V rail, was the leading
+   explanation for RF not reliably triggering the outlet in production
+   despite a standalone TX-only test sketch working fine on the same board).
+   Same alternating on/off RF logic as always. The green hold lasts HOLD_MS
+   -- but card-scanning reopens just 1 second after RF fires, not after the
+   full hold (fixed 2026-10-18, see scanLockoutUntil/holdActive). THERMAL_TEST_MODE below
    controls how long that hold lasts -- see its comment before flashing.
 */
 
@@ -226,7 +228,22 @@ bool pollCardOnce() {
   bool sawCard = mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial();
 
   if (sawCard) {
-    spinAnimationOuter();  // outer ring only, white, 3 laps, exponential speed-up
+    // A new tap always wins -- clear any hold still showing (spinAnimationOuter()
+    // below only ever touches the outer ring, so without this the inner ring's
+    // green from a still-active previous hold would keep showing right through
+    // the new spin instead of being overridden).
+    allOff();
+
+    spinAnimationOuter();  // outer ring only, white, half-ring build-up + accel laps
+
+    // Go straight to the green hold the instant the spin ends, same as the
+    // AnimationComparison sketch's animation -> holdBothGreen() transition --
+    // no gap. The MFRC522 halt/power-down + RF fire below take real time; with
+    // the old blank-ending spin that gap was invisible, but this animation
+    // ends on a lit arc, so doing those steps first left it frozen on screen
+    // before green appeared. LEDs and MFRC522/RF are independent peripherals,
+    // so there's no ordering requirement forcing this hold after RF.
+    holdGreenBoth();  // both strips, solid green
 
     // Power the MFRC522 all the way down BEFORE firing RF, not after (fixed
     // 2026-10-18). Both modules share the 3.3V regulator rail, and the RF
@@ -239,12 +256,10 @@ bool pollCardOnce() {
     mfrc522.PCD_StopCrypto1();
     mfrc522.PCD_SoftPowerDown();
 
-    // RF toggle fires exactly as the solid hold begins -- same alternating
-    // on/off logic as always, just re-timed to this new sequence.
+    // RF toggle fires right after the hold is already showing -- same
+    // alternating on/off logic as always.
     treeOn = !treeOn;
     fireRfCode(treeOn ? RF_CODE_ON : RF_CODE_OFF);
-
-    holdGreenBoth();  // both strips, solid green
 
 #if THERMAL_TEST_MODE
     // Deliberate dead-end: thermal soak test holds the green fill indefinitely
