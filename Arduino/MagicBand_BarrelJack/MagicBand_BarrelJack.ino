@@ -56,8 +56,10 @@
    reader was still powered, sharing the same 3.3V rail, was the leading
    explanation for RF not reliably triggering the outlet in production
    despite a standalone TX-only test sketch working fine on the same board).
-   Same alternating on/off RF logic as always. The green hold lasts HOLD_MS
-   -- but card-scanning reopens just 1 second after RF fires, not after the
+   Same alternating on/off RF logic as always. The green hold lasts
+   HOLD_MS_ON (2 hours) if this tap just switched the relay on, or
+   HOLD_MS_OFF (3.5s) if it just switched it off -- but card-scanning
+   reopens just 1 second after RF fires, not after the
    full hold (fixed 2026-10-18, see scanLockoutUntil/holdActive). THERMAL_TEST_MODE below
    controls how long that hold lasts -- see its comment before flashing.
 */
@@ -103,12 +105,16 @@ const uint8_t        RF_REPEAT   = 5;  // 433MHz is fire-and-forget, no ACK -- r
 // 1 = hold the solid-green state indefinitely (thermal soak test, to check LED/
 //     driver temperatures under sustained load) -- deliberately halts here and
 //     never returns, so card polling stops too. Power-cycle to reset.
-// 0 = normal production behavior: hold green for HOLD_MS, then off, then resume
-//     polling for the next tap.
+// 0 = normal production behavior: hold green for HOLD_MS_ON/HOLD_MS_OFF
+//     (whichever this tap just switched the relay to), then off, then
+//     resume polling for the next tap.
 // Compile-time only -- flip this and reflash, not a runtime toggle.
 #define THERMAL_TEST_MODE 0
 
-const unsigned long HOLD_MS = 7200000UL;  // 2 hours -- production hold duration; unused in THERMAL_TEST_MODE
+// Green hold duration depends on which direction this tap just switched the
+// relay: a long hold while the outlet is ON, a short hold confirming OFF.
+const unsigned long HOLD_MS_ON  = 7200000UL;  // 2 hours -- hold after switching the relay ON
+const unsigned long HOLD_MS_OFF = 3500UL;     // 3.5 seconds -- hold after switching the relay OFF
 
 // -- Animation (HALFRINGACCEL, ported from AnimationComparison 2026-10-25) -----
 // Whole animation's duration, INCLUDING the initial build-up -- change this
@@ -271,10 +277,11 @@ bool pollCardOnce() {
 #else
     // Card-scanning reopens just 1s after RF fires (fixed 2026-10-18) --
     // decoupled from how long the LEDs stay lit. The green hold itself
-    // still runs the full HOLD_MS, timed out separately in loop().
+    // still runs the full HOLD_MS_ON/HOLD_MS_OFF, timed out separately in
+    // loop() -- long hold confirming ON, short hold confirming OFF.
     scanLockoutUntil = millis() + 1000UL;
     holdActive = true;
-    holdEndAt = millis() + HOLD_MS;
+    holdEndAt = millis() + (treeOn ? HOLD_MS_ON : HOLD_MS_OFF);
     return true;  // MFRC522 already powered down above -- skip the redundant call below
 #endif
   }
@@ -308,7 +315,8 @@ void setup() {
 }
 
 void loop() {
-  // Turns the green hold off once HOLD_MS elapses, independent of scanning
+  // Turns the green hold off once holdEndAt is reached (HOLD_MS_ON or
+  // HOLD_MS_OFF, decided when the hold started), independent of scanning
   // (which reopens much sooner -- see scanLockoutUntil in pollCardOnce()).
   if (holdActive && millis() >= holdEndAt) {
     allOff();
