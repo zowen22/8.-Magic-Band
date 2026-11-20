@@ -11,16 +11,16 @@
      VCC -> external 3.3V regulator output (MCP1700-3302)
      IRQ intentionally unconnected -- not used, PICC_IsNewCardPresent() is polled
 
-   NeoPixels (two strips as of 2026-10-13, brightness halved again 2026-10-25):
+   NeoPixels (two strips as of 2026-10-13, brightness cut twice more 2026-10-25):
      Outer ring -> D5  |  38px, denser/smaller LEDs than the original 16px strip
-       |  driven at 25% brightness (setBrightness(64)) -- halved again from
-       50% to further ease current draw on the +5V rail, see the
-       smoke-incident findings in WP4.3
+       |  driven at ~21% brightness (setBrightness(54)) -- halved from 50%,
+       then cut another 15%, to further ease current draw on the +5V rail,
+       see the smoke-incident findings in WP4.3
      Inner ring -> D2  |  34px (corrected 2026-10-18, was 35px), NEW -- bodged directly to U1's DIP leg (no
        designed connector exists on rev 1; see "Build Instructions - Barrel-Jack
        Variant.md" Step 5a for the physical solder points). Rev 2 should give
-       this its own connector -- see Work Packages WP4.3.  |  driven at 50%
-       brightness (halved from 100% 2026-10-25)
+       this its own connector -- see Work Packages WP4.3.  |  driven at ~42%
+       brightness (halved from 100%, then cut another 15%, 2026-10-25)
      Both strips' VCC wired directly to +5V, no gating -- always powered
 
    RF Transmitter (433MHz, D-FLIFE ASK TX):
@@ -305,9 +305,9 @@ void setup() {
   rfSwitch.enableTransmit(RF_PIN);
 
   ledsOuter.begin();
-  ledsOuter.setBrightness(64);  // outer ring at 25% (halved again 2026-10-25) -- also eases current draw on the +5V rail
+  ledsOuter.setBrightness(54);  // outer ring at ~21% (cut another 15% 2026-10-25, from 64) -- also eases current draw on the +5V rail
   ledsInner.begin();
-  ledsInner.setBrightness(127);  // inner ring at 50% (halved from 100% 2026-10-25)
+  ledsInner.setBrightness(108);  // inner ring at ~42% (cut another 15% 2026-10-25, from 127)
   allOff();
 
   Serial.println(F("Ready -- polling continuously, no sleep/wake."));
