@@ -108,7 +108,7 @@ const uint8_t        RF_REPEAT   = 5;  // 433MHz is fire-and-forget, no ACK -- r
 // Compile-time only -- flip this and reflash, not a runtime toggle.
 #define THERMAL_TEST_MODE 0
 
-const unsigned long HOLD_MS = 15000UL;  // production hold duration; unused in THERMAL_TEST_MODE
+const unsigned long HOLD_MS = 7200000UL;  // 2 hours -- production hold duration; unused in THERMAL_TEST_MODE
 
 // -- Animation (HALFRINGACCEL, ported from AnimationComparison 2026-10-25) -----
 // Whole animation's duration, INCLUDING the initial build-up -- change this
